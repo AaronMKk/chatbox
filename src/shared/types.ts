@@ -2,6 +2,7 @@ import { v4 as uuidv4 } from 'uuid'
 import { Model } from '../renderer/packages/models/openai'
 import * as siliconflow from '../renderer/packages/models/siliconflow'
 import { ClaudeModel } from '../renderer/packages/models/claude'
+import { deepseekModel } from '../renderer/packages/models/deepseek'
 
 export const MessageRoleEnum = {
     System: 'system',
@@ -63,6 +64,7 @@ export function createMessage(role: MessageRole = MessageRoleEnum.User, content:
 }
 
 export enum ModelProvider {
+    DeepSeek = 'deepseek',
     ChatboxAI = 'chatbox-ai',
     OpenAI = 'openai',
     Claude = 'claude',
@@ -74,6 +76,11 @@ export enum ModelProvider {
 
 export interface ModelSettings {
     aiProvider: ModelProvider
+    
+    // deepseek
+    deepseekKey: string
+    deepseekapiHost: string
+    deepseekModel: deepseekModel
 
     // openai
     openaiKey: string

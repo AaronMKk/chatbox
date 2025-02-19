@@ -1,4 +1,5 @@
 import OpenAI from './openai'
+import DeepSeek from './deepseek'
 import { Settings, Config, ModelProvider, SessionType } from '../../../shared/types'
 import ChatboxAI from './chatboxai'
 import Ollama from './ollama'
@@ -10,6 +11,8 @@ import PPIO from './ppio'
 
 export function getModel(setting: Settings, config: Config) {
     switch (setting.aiProvider) {
+        case ModelProvider.DeepSeek:
+            return new DeepSeek(setting)
         case ModelProvider.ChatboxAI:
             return new ChatboxAI(setting, config)
         case ModelProvider.OpenAI:
@@ -30,6 +33,7 @@ export function getModel(setting: Settings, config: Config) {
 }
 
 export const aiProviderNameHash = {
+    [ModelProvider.DeepSeek]: 'Kingsware AI',
     [ModelProvider.OpenAI]: 'OpenAI API',
     [ModelProvider.Claude]: 'Claude API',
     [ModelProvider.ChatboxAI]: 'Chatbox AI',
@@ -41,9 +45,15 @@ export const aiProviderNameHash = {
 
 export const AIModelProviderMenuOptionList = [
     {
+        value: ModelProvider.DeepSeek,
+        label: aiProviderNameHash[ModelProvider.DeepSeek],
+        featured: true,
+        disabled: false,
+    },
+    {
         value: ModelProvider.ChatboxAI,
         label: aiProviderNameHash[ModelProvider.ChatboxAI],
-        featured: true,
+        featured: false,
         disabled: false,
     },
     {

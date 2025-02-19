@@ -27,7 +27,6 @@ export default function AIProviderSelect(props: ModelConfigProps) {
     const closeMenu = () => {
         setMenuAnchorEl(null);
     };
-
     return (
         <>
             <Typography variant='caption' className='opacity-50'>
@@ -41,7 +40,7 @@ export default function AIProviderSelect(props: ModelConfigProps) {
                     endIcon={<KeyboardArrowDownIcon />}
                 >
                     <Typography className='text-left' maxWidth={200} noWrap>
-                        { AIModelProviderMenuOptionList.find((provider) => provider.value === settings.aiProvider)?.label || 'Unknown' }
+                        KingsWare
                     </Typography>
                 </Button>
                 <StyledMenu
@@ -72,7 +71,7 @@ export default function AIProviderSelect(props: ModelConfigProps) {
                                 {provider.label}
                                 {provider.featured && (
                                     <Chip
-                                        label={t('Easy Access')}
+                                        label={t('Super Hot')}
                                         size="small"
                                         color="success"
                                         variant="outlined"
