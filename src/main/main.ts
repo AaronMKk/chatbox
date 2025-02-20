@@ -10,7 +10,7 @@
  */
 import os from 'os'
 import path from 'path'
-import { app, BrowserWindow, shell, ipcMain, nativeTheme, session, dialog } from 'electron'
+import { app, BrowserWindow, shell, ipcMain, nativeTheme, session, dialog, desktopCapturer, screen } from 'electron'
 import { autoUpdater } from 'electron-updater'
 import log from 'electron-log'
 import MenuBuilder from './menu'
@@ -21,6 +21,7 @@ import * as proxy from './proxy'
 import * as fs from 'fs-extra'
 import * as analystic from './analystic-node'
 import sanitizeFilename from 'sanitize-filename'
+import { mouse, Point, keyboard, Key } from '@nut-tree/nut-js'
 
 if (process.platform === 'win32') {
     app.setAppUserModelId(app.name)
@@ -174,6 +175,39 @@ app.whenReady()
     .catch(console.log)
 
 // IPC
+
+// desgined for agent feature
+ipcMain.handle('screenshot', async () => {
+    const primaryDisplayId = screen.getPrimaryDisplay().id;
+    const sources = await desktopCapturer.getSources({ types: ['screen'], thumbnailSize: { width: 1920, height: 1080 } });
+  
+    const primaryDisplay = sources.find(source => parseInt(source.display_id, 10) === primaryDisplayId);
+    return primaryDisplay ? primaryDisplay.thumbnail.toDataURL() : null;
+  });
+ipcMain.handle('mouse-click', async (_, x, y) => {
+    await mouse.setPosition(new Point(x, y));
+    await mouse.leftClick();
+    return true;
+});
+ipcMain.handle('mouse-scroll-down', async (_, mt) => {
+    await mouse.scrollDown(mt);
+    return true;
+});
+ipcMain.handle('mouse-scroll-up', async (_, mt) => {
+    await mouse.scrollUp(mt);
+    return true;
+});
+ipcMain.handle('type-text', async (_, x, y, text) => {
+    await mouse.setPosition(new Point(x, y));
+    await mouse.leftClick();
+    await keyboard.type(text);
+    return true;
+});
+ipcMain.handle('press-key', async (_, key) => {
+    await keyboard.pressKey(key);
+    return true;
+});
+// desgined for agent feature
 
 ipcMain.handle('getStoreValue', (event, key) => {
     return store.get(key)

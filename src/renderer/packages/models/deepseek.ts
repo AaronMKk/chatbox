@@ -1,6 +1,7 @@
 import { Message } from 'src/shared/types'
 import { ApiError, ChatboxAIAPIError } from './errors'
 import Base, { onResultChange } from './base'
+import platform from '@/packages/platform'
 
 interface Options {
     deepseekKey: string
@@ -16,17 +17,40 @@ export default class DeepSeek extends Base {
         super()
         this.options = options
         if (this.options.deepseekapiHost && this.options.deepseekapiHost.trim().length === 0) {
-            this.options.deepseekapiHost = 'https://127.0.0.1:5000'
+            this.options.deepseekapiHost = 'http://127.0.0.1:5000'
         }
-        if (this.options.deepseekapiHost && this.options.deepseekapiHost.startsWith('https://openrouter.ai/api/v1')) {
-            this.options.deepseekapiHost = 'https://openrouter.ai/api'
+        if (!this.options.deepseekapiHost) {
+            this.options.deepseekapiHost = 'http://127.0.0.1:5000'
+        }
+        if (!this.options.deepseekModel) {
+            this.options.deepseekModel = 'KingsWare 通用领域大模型'
+        }
+    }
+    async callChatCompletion(rawMessages: Message[], signal?: AbortSignal, onResultChange?: onResultChange): Promise<string> {
+        try {
+            return await this._callChatCompletion(rawMessages, signal, onResultChange)
+        } catch (e) {
+            if (e instanceof ApiError && e.message.includes('Invalid content type. image_url is only supported by certain models.')) {
+                throw ChatboxAIAPIError.fromCodeName('model_not_support_image', 'model_not_support_image')
+            }
+            throw e
         }
     }
 
+    async _callChatCompletion(rawMessages: Message[], signal?: AbortSignal, onResultChange?: onResultChange): Promise<string> {
+        const model = this.options.deepseekModel
+
+        rawMessages = injectModelSystemPrompt(model, rawMessages)
+        const conversation_id = rawMessages[1].id
+
+        const messages = await populateGPTMessage(rawMessages)
+        let image_url: any = await platform.screenshot()
+        return this.requestChatCompletionsNotStream({ model, messages, image_url, conversation_id}, signal, onResultChange)
+    }
     async requestChatCompletionsNotStream(requestBody: Record<string, any>, signal?: AbortSignal, onResultChange?: onResultChange): Promise<string> {
-        const apiPath = this.options.deepseekapiHost || '/v1/chat/completions'
-        const response = await this.post(
-            `${this.options.deepseekapiHost}${apiPath}`,
+        const apiPath = this.options.deepseekapiHost + '/v1/chat/completions'
+        const response = await this.post( 
+            `${apiPath}`,
             this.getHeaders(),
             requestBody,
             signal

@@ -88,6 +88,27 @@ export class DesktopPlatform {
     public async appLog(level: string, message: string) {
         return this.ipc.invoke('appLog', JSON.stringify({ level, message }))
     }
+
+    // desgined for agent feature
+    public async screenshot() {
+        return this.ipc.invoke('screenshot')
+    }
+    public async mouseClick() {
+        return this.ipc.invoke('mouse-click')
+    }
+    public async mouseScrollDown() {
+        return this.ipc.invoke('mouse-scroll-down')
+    }
+    public async mouseScrollUp() {
+        return this.ipc.invoke('mouse-scroll-up')
+    }
+    public async typeText() {
+        return this.ipc.invoke('type-text')
+    }
+    public async pressKey() {
+        return this.ipc.invoke('press-key')
+    }
+    // desgined for agent feature
 }
 
 export default new DesktopPlatform(window.electronAPI as any)

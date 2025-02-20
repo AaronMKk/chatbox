@@ -18,6 +18,7 @@ export interface Message {
     role: MessageRole
     content: string
     name?: string
+    image_url?: string
 
     cancel?: () => void
     generating?: boolean

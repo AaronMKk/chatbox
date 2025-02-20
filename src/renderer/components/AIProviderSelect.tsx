@@ -40,7 +40,7 @@ export default function AIProviderSelect(props: ModelConfigProps) {
                     endIcon={<KeyboardArrowDownIcon />}
                 >
                     <Typography className='text-left' maxWidth={200} noWrap>
-                        KingsWare
+                    { AIModelProviderMenuOptionList.find((provider) => provider.value === settings.aiProvider)?.label || 'Unknown' }
                     </Typography>
                 </Button>
                 <StyledMenu
