@@ -115,7 +115,7 @@ export default class Base {
         headers: Record<string, string>,
         body: Record<string, any>,
         signal?: AbortSignal,
-        retry = 3
+        retry = 0
     ) {
         let requestError: ApiError | NetworkError | null = null
         for (let i = 0; i < retry + 1; i++) {

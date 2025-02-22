@@ -22,6 +22,7 @@ import * as fs from 'fs-extra'
 import * as analystic from './analystic-node'
 import sanitizeFilename from 'sanitize-filename'
 import { mouse, Point, keyboard, Key } from '@nut-tree/nut-js'
+import sharp from 'sharp'
 
 if (process.platform === 'win32') {
     app.setAppUserModelId(app.name)
@@ -53,34 +54,9 @@ class AppUpdater {
 
 let mainWindow: BrowserWindow | null = null
 
-if (process.env.NODE_ENV === 'production') {
-    const sourceMapSupport = require('source-map-support')
-    sourceMapSupport.install()
-}
-
 const isDebug = process.env.NODE_ENV === 'development' || process.env.DEBUG_PROD === 'true'
 
-if (isDebug) {
-    require('electron-debug')()
-}
-
-// const installExtensions = async () => {
-//     const installer = require('electron-devtools-installer')
-//     const forceDownload = !!process.env.UPGRADE_EXTENSIONS
-//     const extensions = ['REACT_DEVELOPER_TOOLS']
-
-//     return installer
-//         .default(
-//             extensions.map((name) => installer[name]),
-//             forceDownload
-//         )
-//         .catch(console.log)
-// }
-
 const createWindow = async () => {
-    if (isDebug) {
-    }
-
     const RESOURCES_PATH = app.isPackaged
         ? path.join(process.resourcesPath, 'assets')
         : path.join(__dirname, '../../assets')
@@ -90,10 +66,13 @@ const createWindow = async () => {
     }
 
     mainWindow = new BrowserWindow({
+        frame: false,
         show: false,
-        width: 1000,
-        height: 950,
+        width: 650,
+        height: screen.getPrimaryDisplay().size.height,
         icon: getAssetPath('icon.png'),
+        alwaysOnTop: true,
+        x: screen.getPrimaryDisplay().size.width - 650,
         webPreferences: {
             spellcheck: true,
             webSecurity: false,
@@ -124,17 +103,45 @@ const createWindow = async () => {
     const menuBuilder = new MenuBuilder(mainWindow)
     menuBuilder.buildMenu()
 
-    // Open urls in the user's browser
-    mainWindow.webContents.setWindowOpenHandler((edata) => {
-        shell.openExternal(edata.url)
-        return { action: 'deny' }
-    })
-
-    // https://www.computerhope.com/jargon/m/menubar.htm
     mainWindow.setMenuBarVisibility(false)
 
-    // Remove this if your app does not use auto updates
-    // eslint-disable-next-line
+    let hidePosition = screen.getPrimaryDisplay().size.width - 0;
+    let showPosition = screen.getPrimaryDisplay().size.width - 650;
+    let transitionSpeed = 15;
+
+    const monitorWindowPosition = () => {
+        if (!mainWindow) return;
+
+        const windowPos = mainWindow.getBounds();
+        const mousePos = screen.getCursorScreenPoint();
+        // show
+        if (mousePos.x > screen.getPrimaryDisplay().size.width - 10) {
+            animateWindowSlide(windowPos, showPosition);
+        }
+        // hide 
+        if (mousePos.x < screen.getPrimaryDisplay().size.width - 650) {
+            animateWindowSlide(windowPos, hidePosition);
+        }
+    }
+
+    const animateWindowSlide = (windowPos: any, targetPosition: number) => {
+        let currentX = windowPos.x;
+        let step = targetPosition < currentX ? -1 : 1;
+
+        const interval = setInterval(() => {
+            currentX += step * transitionSpeed;
+
+            if ((step === 1 && currentX >= targetPosition) || (step === -1 && currentX <= targetPosition)) {
+                currentX = targetPosition;
+                clearInterval(interval);
+            }
+
+            mainWindow?.setBounds({ ...windowPos, x: currentX });
+        }, 3);
+    }
+
+    setInterval(monitorWindowPosition, 500);
+
     new AppUpdater()
 
     session.defaultSession.webRequest.onHeadersReceived((details, callback) => {
@@ -150,13 +157,8 @@ const createWindow = async () => {
     })
 }
 
-/**
- * Add event listeners...
- */
 
 app.on('window-all-closed', () => {
-    // Respect the OSX convention of having the application in memory even
-    // after all windows have been closed
     if (process.platform !== 'darwin') {
         app.quit()
     }
@@ -166,27 +168,37 @@ app.whenReady()
     .then(() => {
         createWindow()
         app.on('activate', () => {
-            // On macOS it's common to re-create a window in the app when the
-            // dock icon is clicked and there are no other windows open.
             if (mainWindow === null) createWindow()
         })
-        proxy.init()
     })
     .catch(console.log)
 
-// IPC
-
-// desgined for agent feature
 ipcMain.handle('screenshot', async () => {
     const primaryDisplayId = screen.getPrimaryDisplay().id;
-    const sources = await desktopCapturer.getSources({ types: ['screen'], thumbnailSize: { width: 1920, height: 1080 } });
-  
+    const sources = await desktopCapturer.getSources({ types: ['screen'], thumbnailSize: { width: screen.getPrimaryDisplay().size.width, height: screen.getPrimaryDisplay().size.height } });
+
     const primaryDisplay = sources.find(source => parseInt(source.display_id, 10) === primaryDisplayId);
-    return primaryDisplay ? primaryDisplay.thumbnail.toDataURL() : null;
-  });
+
+    if (primaryDisplay) {
+        const buffer = primaryDisplay.thumbnail.toPNG();
+        const jpegBuffer = await sharp(buffer).jpeg().toBuffer();
+        return `data:image/jpeg;base64,${jpegBuffer.toString('base64')}`;
+    }
+    return null;
+});
+ipcMain.handle('get-resolution', async () => {
+    const primaryDisplay = screen.getPrimaryDisplay();
+    const { width, height } = primaryDisplay.size;
+    return { width, height };
+});
 ipcMain.handle('mouse-click', async (_, x, y) => {
     await mouse.setPosition(new Point(x, y));
     await mouse.leftClick();
+    return true;
+});
+ipcMain.handle('double-click', async (_, x, y) => {
+    await mouse.setPosition(new Point(x, y));
+    await mouse.doubleClick(0);
     return true;
 });
 ipcMain.handle('mouse-scroll-down', async (_, mt) => {
@@ -207,7 +219,7 @@ ipcMain.handle('press-key', async (_, key) => {
     await keyboard.pressKey(key);
     return true;
 });
-// desgined for agent feature
+//////////////// desgined for agent feature //////////////////
 
 ipcMain.handle('getStoreValue', (event, key) => {
     return store.get(key)

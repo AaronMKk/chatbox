@@ -90,25 +90,35 @@ export class DesktopPlatform {
     }
 
     // desgined for agent feature
+    public async resize(state: Number, message: String) {
+        return this.ipc.invoke('resize', state, message)
+    }
     public async screenshot() {
         return this.ipc.invoke('screenshot')
     }
-    public async mouseClick() {
-        return this.ipc.invoke('mouse-click')
+    public async mouseClick(x: number, y: number) {
+        return this.ipc.invoke('mouse-click', x, y)
     }
-    public async mouseScrollDown() {
-        return this.ipc.invoke('mouse-scroll-down')
+    public async getResolution() {
+        return this.ipc.invoke('get-resolution')
     }
-    public async mouseScrollUp() {
-        return this.ipc.invoke('mouse-scroll-up')
+    public async doubleClick(x: number, y: number) {
+        return this.ipc.invoke('double-click', x, y)
     }
-    public async typeText() {
-        return this.ipc.invoke('type-text')
+    public async mouseScrollDown(step_count: number) {
+        return this.ipc.invoke('mouse-scroll-down', step_count)
     }
-    public async pressKey() {
-        return this.ipc.invoke('press-key')
+    public async mouseScrollUp(step_count: number) {
+        return this.ipc.invoke('mouse-scroll-up', step_count)
+    }
+    public async typeText(x: number, y: number, text: string) {
+        return this.ipc.invoke('type-text', x, y, text)
+    }
+    public async pressKey(key: string) {
+        return this.ipc.invoke('press-key', key)
     }
     // desgined for agent feature
+
 }
 
 export default new DesktopPlatform(window.electronAPI as any)
