@@ -78,9 +78,11 @@ export default class DeepSeek extends Base {
             if (onResultChange) {
                 onResultChange(json.data.content.message)
             }
+            platform.sendMessage(json.data.content.message)
             this.excuteAction(json, json.data.content.message)
             await sleep(1000)
             let image_url: any = await platform.screenshot()
+            platform.sendThumbnail(image_url)
             requestBody.image_url = image_url
             this.requestChatCompletionsNotStream(requestBody, signal, onResultChange)
         }

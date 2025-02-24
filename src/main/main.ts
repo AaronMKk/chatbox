@@ -21,7 +21,7 @@ import * as proxy from './proxy'
 import * as fs from 'fs-extra'
 import * as analystic from './analystic-node'
 import sanitizeFilename from 'sanitize-filename'
-import { mouse, Point, keyboard, Key } from '@nut-tree/nut-js'
+import { mouse, Point, keyboard, Key, clipboard } from '@nut-tree/nut-js'
 import sharp from 'sharp'
 
 if (process.platform === 'win32') {
@@ -53,6 +53,7 @@ class AppUpdater {
 }
 
 let mainWindow: BrowserWindow | null = null
+let secondaryWindow: BrowserWindow | null = null;
 
 const isDebug = process.env.NODE_ENV === 'development' || process.env.DEBUG_PROD === 'true'
 
@@ -65,14 +66,88 @@ const createWindow = async () => {
         return path.join(RESOURCES_PATH, ...paths)
     }
 
+    // mainWindow = new BrowserWindow({
+    //     frame: false,
+    //     show: false,
+    //     width: 650,
+    //     height: screen.getPrimaryDisplay().size.height,
+    //     icon: getAssetPath('icon.png'),
+    //     alwaysOnTop: true,
+    //     x: screen.getPrimaryDisplay().size.width - 650,
+    //     skipTaskbar: true,
+    //     webPreferences: {
+    //         spellcheck: true,
+    //         webSecurity: false,
+    //         allowRunningInsecureContent: false,
+    //         preload: app.isPackaged
+    //             ? path.join(__dirname, 'preload.js')
+    //             : path.join(__dirname, '../../.erb/dll/preload.js'),
+    //     },
+    // })
+
+    // mainWindow.loadURL(resolveHtmlPath('index.html'))
+
+    // mainWindow.on('ready-to-show', () => {
+    //     if (!mainWindow) {
+    //         throw new Error('"mainWindow" is not defined')
+    //     }
+    //     if (process.env.START_MINIMIZED) {
+    //         mainWindow.minimize()
+    //     } else {
+    //         mainWindow.show()
+    //     }
+    // })
+
+    // mainWindow.on('closed', () => {
+    //     mainWindow = null
+    // })
+
+    // const menuBuilder = new MenuBuilder(mainWindow)
+    // menuBuilder.buildMenu()
+
+    // mainWindow.setMenuBarVisibility(false)
+
+    // let hidePosition = screen.getPrimaryDisplay().size.width - 0;
+    // let showPosition = screen.getPrimaryDisplay().size.width - 650;
+    // let transitionSpeed = 15;
+
+    // const monitorWindowPosition = () => {
+    //     if (!mainWindow) return;
+
+    //     const windowPos = mainWindow.getBounds();
+    //     const mousePos = screen.getCursorScreenPoint();
+    //     // show
+    //     if (mousePos.x > screen.getPrimaryDisplay().size.width - 10) {
+    //         animateWindowSlide(windowPos, showPosition);
+    //     }
+    //     // hide 
+    //     if (mousePos.x < screen.getPrimaryDisplay().size.width - 650) {
+    //         animateWindowSlide(windowPos, hidePosition);
+    //     }
+    // }
+
+    // const animateWindowSlide = (windowPos: any, targetPosition: number) => {
+    //     let currentX = windowPos.x;
+    //     let step = targetPosition < currentX ? -1 : 1;
+
+    //     const interval = setInterval(() => {
+    //         currentX += step * transitionSpeed;
+
+    //         if ((step === 1 && currentX >= targetPosition) || (step === -1 && currentX <= targetPosition)) {
+    //             currentX = targetPosition;
+    //             clearInterval(interval);
+    //         }
+
+    //         mainWindow?.setBounds({ ...windowPos, x: currentX });
+    //     }, 3);
+    // }
+
+    // setInterval(monitorWindowPosition, 500);
     mainWindow = new BrowserWindow({
-        frame: false,
         show: false,
-        width: 650,
-        height: screen.getPrimaryDisplay().size.height,
+        width: 1000,
+        height: 950,
         icon: getAssetPath('icon.png'),
-        alwaysOnTop: true,
-        x: screen.getPrimaryDisplay().size.width - 650,
         webPreferences: {
             spellcheck: true,
             webSecurity: false,
@@ -103,44 +178,48 @@ const createWindow = async () => {
     const menuBuilder = new MenuBuilder(mainWindow)
     menuBuilder.buildMenu()
 
+    // Open urls in the user's browser
+    mainWindow.webContents.setWindowOpenHandler((edata) => {
+        shell.openExternal(edata.url)
+        return { action: 'deny' }
+    })
+
+    // https://www.computerhope.com/jargon/m/menubar.htm
     mainWindow.setMenuBarVisibility(false)
+    // second
+    secondaryWindow = new BrowserWindow({
+        // show: false,
+        width: 160,
+        height: 65,
+        parent: mainWindow,
+        modal: false,
+        alwaysOnTop: true,
+        skipTaskbar: true,
+        resizable: false,
+        movable: true,
+        frame: false,
+        webPreferences: {
+            spellcheck: true,
+            webSecurity: false,
+            allowRunningInsecureContent: false,
+            preload: app.isPackaged
+                ? path.join(__dirname, 'preload.js')
+                : path.join(__dirname, '../../.erb/dll/preload.js'),
+        },
+    });
+    const { width: screenWidth } = screen.getPrimaryDisplay().bounds;
+    const windowWidth = 360;
+    const x = Math.floor((screenWidth - windowWidth) / 2);
+    const y = 0;
+    
+    // Set the window position
+    secondaryWindow.setBounds({ x, y, width: windowWidth, height: 65 });
+    secondaryWindow.loadURL(resolveHtmlPath('secondary.html'));
 
-    let hidePosition = screen.getPrimaryDisplay().size.width - 0;
-    let showPosition = screen.getPrimaryDisplay().size.width - 650;
-    let transitionSpeed = 15;
-
-    const monitorWindowPosition = () => {
-        if (!mainWindow) return;
-
-        const windowPos = mainWindow.getBounds();
-        const mousePos = screen.getCursorScreenPoint();
-        // show
-        if (mousePos.x > screen.getPrimaryDisplay().size.width - 10) {
-            animateWindowSlide(windowPos, showPosition);
-        }
-        // hide 
-        if (mousePos.x < screen.getPrimaryDisplay().size.width - 650) {
-            animateWindowSlide(windowPos, hidePosition);
-        }
-    }
-
-    const animateWindowSlide = (windowPos: any, targetPosition: number) => {
-        let currentX = windowPos.x;
-        let step = targetPosition < currentX ? -1 : 1;
-
-        const interval = setInterval(() => {
-            currentX += step * transitionSpeed;
-
-            if ((step === 1 && currentX >= targetPosition) || (step === -1 && currentX <= targetPosition)) {
-                currentX = targetPosition;
-                clearInterval(interval);
-            }
-
-            mainWindow?.setBounds({ ...windowPos, x: currentX });
-        }, 3);
-    }
-
-    setInterval(monitorWindowPosition, 500);
+    secondaryWindow.on('closed', () => {
+        secondaryWindow = null;
+    });
+    // secondaryWindow.webContents.toggleDevTools()
 
     new AppUpdater()
 
@@ -172,6 +251,32 @@ app.whenReady()
         })
     })
     .catch(console.log)
+
+
+ipcMain.handle('close-first-window', async () => {
+    mainWindow?.hide()
+    return true;
+});
+ipcMain.handle('show-first-window', async () => {
+    mainWindow?.show()
+    return true;
+});
+ipcMain.handle('close-second-window', async () => {
+    secondaryWindow?.hide()
+    return true;
+});
+ipcMain.handle('show-second-window', async () => {
+    secondaryWindow?.show()
+    return true;
+});
+ipcMain.handle('send-message', async (_, messgae) => {
+    secondaryWindow?.webContents.send('action', messgae)
+    return true;
+});
+ipcMain.handle('send-thumbnail', async (_, base64) => {
+    secondaryWindow?.webContents.send('thumbnail', base64)
+    return true;
+});
 
 ipcMain.handle('screenshot', async () => {
     const primaryDisplayId = screen.getPrimaryDisplay().id;
@@ -212,7 +317,12 @@ ipcMain.handle('mouse-scroll-up', async (_, mt) => {
 ipcMain.handle('type-text', async (_, x, y, text) => {
     await mouse.setPosition(new Point(x, y));
     await mouse.leftClick();
-    await keyboard.type(text);
+    // await keyboard.type(text);
+    clipboard.setContent(text);
+    await keyboard.pressKey(Key.LeftControl);
+    await keyboard.pressKey(Key.V);
+    await keyboard.releaseKey(Key.LeftControl);
+    await keyboard.releaseKey(Key.V);
     return true;
 });
 ipcMain.handle('press-key', async (_, key) => {

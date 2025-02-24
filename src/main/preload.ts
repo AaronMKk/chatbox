@@ -11,6 +11,12 @@ const electronHandler: ElectronIPC = {
         ipcRenderer.on('window-show', callback)
         return () => ipcRenderer.off('window-show', callback)
     },
+    onActionMessage: (callback: (message: string) => void) => {
+        ipcRenderer.on('action', (event, message) => {
+            callback(message);
+        });
+        return () => ipcRenderer.off('action', callback);
+    },
 }
 
 contextBridge.exposeInMainWorld('electronAPI', electronHandler)

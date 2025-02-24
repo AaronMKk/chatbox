@@ -43,16 +43,23 @@ const configuration: webpack.Configuration = {
 
     target: ['web', 'electron-renderer'],
 
-    entry: [
-        `webpack-dev-server/client?http://localhost:${port}/dist`,
-        'webpack/hot/only-dev-server',
-        path.join(webpackPaths.srcRendererPath, 'index.tsx'),
-    ],
+    entry: {
+        main: [
+            `webpack-dev-server/client?http://localhost:${port}/dist`,
+            'webpack/hot/only-dev-server',
+            path.join(webpackPaths.srcRendererPath, 'index.tsx'),
+        ],
+        second: [
+            `webpack-dev-server/client?http://localhost:${port}/dist`,
+            'webpack/hot/only-dev-server',
+            path.join(webpackPaths.srcRendererPath, 'second_index.tsx'),
+        ],
+    },
 
     output: {
         path: webpackPaths.distRendererPath,
         publicPath: '/',
-        filename: 'renderer.dev.js',
+        filename: '[name].renderer.dev.js',
         library: {
             type: 'umd',
         },
@@ -160,7 +167,24 @@ const configuration: webpack.Configuration = {
                 removeAttributeQuotes: true,
                 removeComments: true,
             },
+            chunks: ['main'], // modified
             isBrowser: false,
+            env: process.env.NODE_ENV,
+            isDevelopment: process.env.NODE_ENV !== 'production',
+            nodeModules: webpackPaths.appNodeModulesPath,
+            favicon: path.join(webpackPaths.srcRendererPath, 'favicon.ico'),
+        }),
+        new HtmlWebpackPlugin({ // modified
+            // filename: 'secondary.html',
+            filename: path.join('secondary.html'),
+            minify: {
+                collapseWhitespace: true,
+                removeAttributeQuotes: true,
+                removeComments: true,
+            },
+            chunks: ['second'],
+            isBrowser: false,
+            template: path.join(webpackPaths.srcRendererPath, 'index.ejs'),
             env: process.env.NODE_ENV,
             isDevelopment: process.env.NODE_ENV !== 'production',
             nodeModules: webpackPaths.appNodeModulesPath,

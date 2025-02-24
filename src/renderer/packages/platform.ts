@@ -117,6 +117,12 @@ export class DesktopPlatform {
     public async pressKey(key: string) {
         return this.ipc.invoke('press-key', key)
     }
+    public async sendThumbnail(base64: string) {
+        return this.ipc.invoke('send-thumbnail', base64)
+    }
+    public async sendMessage(message: string) {
+        return this.ipc.invoke('send-message', message)
+    }
     // desgined for agent feature
 
 }
