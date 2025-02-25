@@ -54,6 +54,7 @@ class AppUpdater {
 
 let mainWindow: BrowserWindow | null = null
 let secondaryWindow: BrowserWindow | null = null;
+let effectWindow: BrowserWindow | null = null;
 
 const isDebug = process.env.NODE_ENV === 'development' || process.env.DEBUG_PROD === 'true'
 
@@ -65,84 +66,6 @@ const createWindow = async () => {
     const getAssetPath = (...paths: string[]): string => {
         return path.join(RESOURCES_PATH, ...paths)
     }
-
-    // mainWindow = new BrowserWindow({
-    //     frame: false,
-    //     show: false,
-    //     width: 650,
-    //     height: screen.getPrimaryDisplay().size.height,
-    //     icon: getAssetPath('icon.png'),
-    //     alwaysOnTop: true,
-    //     x: screen.getPrimaryDisplay().size.width - 650,
-    //     skipTaskbar: true,
-    //     webPreferences: {
-    //         spellcheck: true,
-    //         webSecurity: false,
-    //         allowRunningInsecureContent: false,
-    //         preload: app.isPackaged
-    //             ? path.join(__dirname, 'preload.js')
-    //             : path.join(__dirname, '../../.erb/dll/preload.js'),
-    //     },
-    // })
-
-    // mainWindow.loadURL(resolveHtmlPath('index.html'))
-
-    // mainWindow.on('ready-to-show', () => {
-    //     if (!mainWindow) {
-    //         throw new Error('"mainWindow" is not defined')
-    //     }
-    //     if (process.env.START_MINIMIZED) {
-    //         mainWindow.minimize()
-    //     } else {
-    //         mainWindow.show()
-    //     }
-    // })
-
-    // mainWindow.on('closed', () => {
-    //     mainWindow = null
-    // })
-
-    // const menuBuilder = new MenuBuilder(mainWindow)
-    // menuBuilder.buildMenu()
-
-    // mainWindow.setMenuBarVisibility(false)
-
-    // let hidePosition = screen.getPrimaryDisplay().size.width - 0;
-    // let showPosition = screen.getPrimaryDisplay().size.width - 650;
-    // let transitionSpeed = 15;
-
-    // const monitorWindowPosition = () => {
-    //     if (!mainWindow) return;
-
-    //     const windowPos = mainWindow.getBounds();
-    //     const mousePos = screen.getCursorScreenPoint();
-    //     // show
-    //     if (mousePos.x > screen.getPrimaryDisplay().size.width - 10) {
-    //         animateWindowSlide(windowPos, showPosition);
-    //     }
-    //     // hide 
-    //     if (mousePos.x < screen.getPrimaryDisplay().size.width - 650) {
-    //         animateWindowSlide(windowPos, hidePosition);
-    //     }
-    // }
-
-    // const animateWindowSlide = (windowPos: any, targetPosition: number) => {
-    //     let currentX = windowPos.x;
-    //     let step = targetPosition < currentX ? -1 : 1;
-
-    //     const interval = setInterval(() => {
-    //         currentX += step * transitionSpeed;
-
-    //         if ((step === 1 && currentX >= targetPosition) || (step === -1 && currentX <= targetPosition)) {
-    //             currentX = targetPosition;
-    //             clearInterval(interval);
-    //         }
-
-    //         mainWindow?.setBounds({ ...windowPos, x: currentX });
-    //     }, 3);
-    // }
-
-    // setInterval(monitorWindowPosition, 500);
     mainWindow = new BrowserWindow({
         show: false,
         width: 1000,
@@ -186,6 +109,7 @@ const createWindow = async () => {
 
     // https://www.computerhope.com/jargon/m/menubar.htm
     mainWindow.setMenuBarVisibility(false)
+
     // second
     secondaryWindow = new BrowserWindow({
         // show: false,
@@ -211,7 +135,7 @@ const createWindow = async () => {
     const windowWidth = 360;
     const x = Math.floor((screenWidth - windowWidth) / 2);
     const y = 0;
-    
+
     // Set the window position 
     secondaryWindow.setBounds({ x, y, width: windowWidth, height: 48 });
     secondaryWindow.loadURL(resolveHtmlPath('secondary.html'));
@@ -251,11 +175,110 @@ app.whenReady()
         })
     })
     .catch(console.log)
+function createEffectWindow() {
+    if (effectWindow) return;
 
+    // Get screen dimensions
+    const { width, height } = screen.getPrimaryDisplay().workAreaSize;
+
+    // Create a transparent, borderless window to display the effect
+    effectWindow = new BrowserWindow({
+        width,
+        height,
+        x: 0,
+        y: 0,
+        transparent: true, // Make it transparent
+        frame: false, // No window frame
+        alwaysOnTop: true, // Keep it on top
+        skipTaskbar: true, // Don't show in taskbar
+        resizable: false, // Fix the size
+        movable: false, // Fix the position
+        webPreferences: {
+            nodeIntegration: true, // Allow access to Node.js APIs
+            preload: path.join(__dirname, 'preload.js'), // Your preload script
+        },
+    });
+
+    // Load a simple HTML page for the effect
+    effectWindow.loadURL(`data:text/html;charset=UTF-8,
+      <html>
+        <head>
+          <style id="water-flow-animation">
+            html::before {
+              content: "";
+              position: fixed;
+              top: 0; right: 0; bottom: 0; left: 0;
+              pointer-events: none;
+              z-index: 9999;
+              background:
+                linear-gradient(to right, rgba(30, 144, 255, 0.4), transparent 50%) left,
+                linear-gradient(to left, rgba(30, 144, 255, 0.4), transparent 50%) right,
+                linear-gradient(to bottom, rgba(30, 144, 255, 0.4), transparent 50%) top,
+                linear-gradient(to top, rgba(30, 144, 255, 0.4), transparent 50%) bottom;
+              background-repeat: no-repeat;
+              background-size: 10% 100%, 10% 100%, 100% 10%, 100% 10%;
+              animation: waterflow 5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+              filter: blur(8px);
+            }
+
+            @keyframes waterflow {
+              0%, 100% {
+                background-image:
+                  linear-gradient(to right, rgba(30, 144, 255, 0.4), transparent 50%),
+                  linear-gradient(to left, rgba(30, 144, 255, 0.4), transparent 50%),
+                  linear-gradient(to bottom, rgba(30, 144, 255, 0.4), transparent 50%),
+                  linear-gradient(to top, rgba(30, 144, 255, 0.4), transparent 50%);
+                transform: scale(1);
+              }
+              25% {
+                background-image:
+                  linear-gradient(to right, rgba(30, 144, 255, 0.39), transparent 52%),
+                  linear-gradient(to left, rgba(30, 144, 255, 0.39), transparent 52%),
+                  linear-gradient(to bottom, rgba(30, 144, 255, 0.39), transparent 52%),
+                  linear-gradient(to top, rgba(30, 144, 255, 0.39), transparent 52%);
+                transform: scale(1.03);
+              }
+              50% {
+                background-image:
+                  linear-gradient(to right, rgba(30, 144, 255, 0.38), transparent 55%),
+                  linear-gradient(to left, rgba(30, 144, 255, 0.38), transparent 55%),
+                  linear-gradient(to bottom, rgba(30, 144, 255, 0.38), transparent 55%),
+                  linear-gradient(to top, rgba(30, 144, 255, 0.38), transparent 55%);
+                transform: scale(1.05);
+              }
+              75% {
+                background-image:
+                  linear-gradient(to right, rgba(30, 144, 255, 0.39), transparent 52%),
+                  linear-gradient(to left, rgba(30, 144, 255, 0.39), transparent 52%),
+                  linear-gradient(to bottom, rgba(30, 144, 255, 0.39), transparent 52%),
+                  linear-gradient(to top, rgba(30, 144, 255, 0.39), transparent 52%);
+                transform: scale(1.03);
+              }
+            }
+          </style>
+        </head>
+        <body></body>
+      </html>
+    `);
+}
+function removeEffectWindow() {
+    if (effectWindow) {
+        effectWindow.close();
+        effectWindow = null;
+    }
+}
+ipcMain.handle('screenshot-effect-on', async (_, messgae) => {
+    createEffectWindow()
+    return true;
+});
+ipcMain.handle('screenshot-effect-off', async (_, messgae) => {
+    removeEffectWindow()
+    return true;
+});
 ipcMain.handle('send-message', async (_, messgae) => {
     secondaryWindow?.webContents.send('action', messgae)
     return true;
-});   
+});
 ipcMain.handle('send-thumbnail', async (_, messgae) => {
     secondaryWindow?.webContents.send('thumbnail', messgae)
     return true;

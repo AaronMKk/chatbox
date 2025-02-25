@@ -93,6 +93,12 @@ export class DesktopPlatform {
     public async screenshot() {
         return this.ipc.invoke('screenshot')
     }
+    public async effectOn() {
+        return this.ipc.invoke('screenshot-effect-on')
+    }
+    public async effectOff() {
+        return this.ipc.invoke('screenshot-effect-off')
+    }
     public async mouseClick(x: number, y: number) {
         return this.ipc.invoke('mouse-click', x, y)
     }

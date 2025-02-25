@@ -55,7 +55,11 @@ export default class DeepSeek extends Base {
 
         const messages = await populateGPTMessage(rawMessages)
         // first screenshoot
+        platform.effectOn()
         let image_url: any = await platform.screenshot()
+        await sleep(5000)
+        platform.effectOff()
+
         return this.requestChatCompletionsNotStream({ model, messages, image_url, conversation_id }, signal, onResultChange)
     }
     async requestChatCompletionsNotStream(requestBody: Record<string, any>, signal?: AbortSignal, onResultChange?: onResultChange): Promise<string> {
@@ -87,7 +91,11 @@ export default class DeepSeek extends Base {
             platform.sendMessage(json.data.content.message)
             this.excuteAction(json)
             await sleep(1000)
+
+            platform.effectOn()
             let image_url: any = await platform.screenshot()
+            platform.effectOff()
+
             requestBody.image_url = image_url
             this.requestChatCompletionsNotStream(requestBody, signal, onResultChange)
         }
