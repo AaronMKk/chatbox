@@ -5,6 +5,7 @@ import InputBox from './components/InputBox'
 import MessageList from './components/MessageList'
 import { drawerWidth } from './Sidebar'
 import Header from './components/Header'
+import TitleBar from './components/TitleBar'
 
 interface Props {}
 
@@ -20,6 +21,7 @@ export default function MainPane(props: Props) {
             }}
         >
             <div className="flex flex-col h-full">
+                <TitleBar />
                 <Header />
                 <MessageList />
                 <InputBox currentSessionId={currentSession.id} currentSessionType={currentSession.type || 'chat'} />

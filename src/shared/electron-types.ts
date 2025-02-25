@@ -1,7 +1,13 @@
 export interface ElectronIPC {
-    invoke: (channel: string, ...args: any[]) => Promise<any>
-    onSystemThemeChange: (callback: () => void) => () => Electron.IpcRenderer
-    onWindowShow: (callback: () => void) => () => Electron.IpcRenderer
-    onActionMessage: (callback: (message: string) => void) => () => Electron.IpcRenderer;
-    onThumbnailMessage: (callback: (message: string) => void) => () => Electron.IpcRenderer;
+    invoke: typeof ipcRenderer.invoke;
+    onSystemThemeChange: (callback: () => void) => () => void;
+    onWindowShow: (callback: () => void) => () => void;
+    onActionMessage: (callback: (message: string) => void) => () => void;
+    onThumbnailMessage: (callback: (message: string) => void) => () => void;
+    windowControls: {
+        minimize: () => Promise<boolean>;
+        maximize: () => Promise<boolean>;
+        close: () => Promise<boolean>;
+        isMaximized: () => Promise<boolean>;
+    };
 }

@@ -71,6 +71,7 @@ const createWindow = async () => {
         width: 1000,
         height: 950,
         icon: getAssetPath('icon.png'),
+        frame: false,
         webPreferences: {
             spellcheck: true,
             webSecurity: false,
@@ -441,3 +442,26 @@ ipcMain.handle('appLog', (event, dataJson) => {
             log.info(data.message)
     }
 })
+
+ipcMain.handle('window-minimize', () => {
+    mainWindow?.minimize();
+    return true;
+});
+
+ipcMain.handle('window-maximize', () => {
+    if (mainWindow?.isMaximized()) {
+        mainWindow.unmaximize();
+    } else {
+        mainWindow?.maximize();
+    }
+    return true;
+});
+
+ipcMain.handle('window-close', () => {
+    mainWindow?.close();
+    return true;
+});
+
+ipcMain.handle('window-is-maximized', () => {
+    return mainWindow?.isMaximized();
+});
