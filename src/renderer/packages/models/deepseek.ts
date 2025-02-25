@@ -7,6 +7,9 @@ interface Options {
     deepseekKey: string
     deepseekapiHost: string
     deepseekModel: deepseekModel | 'custom-model'
+    temperature: number
+    topP: number
+    repetition_penalty: number
 }
 interface ActionInput {
     action: string;
@@ -57,10 +60,17 @@ export default class DeepSeek extends Base {
         // first screenshoot
         platform.effectOn()
         let image_url: any = await platform.screenshot()
-        await sleep(5000)
-        platform.effectOff()
+        // platform.effectOff()
 
-        return this.requestChatCompletionsNotStream({ model, messages, image_url, conversation_id }, signal, onResultChange)
+        return this.requestChatCompletionsNotStream({
+            model,
+            messages,
+            image_url,
+            conversation_id,
+            temperature: this.options.temperature,
+            top_p: this.options.topP,
+            repetition_penalty: this.options.repetition_penalty,
+         }, signal, onResultChange)
     }
     async requestChatCompletionsNotStream(requestBody: Record<string, any>, signal?: AbortSignal, onResultChange?: onResultChange): Promise<string> {
         platform.sendThumbnail(requestBody.image_url)
@@ -83,7 +93,7 @@ export default class DeepSeek extends Base {
             }
         }
         if (json.data.content.type === 'exec') {
-            // platform.closeFirstWindow();
+            platform.closeFirstWindow();
             platform.showSecondWindow();
             if (onResultChange) {
                 onResultChange(' \n 执行操作： \n ' + json.data.content.message)
@@ -94,7 +104,7 @@ export default class DeepSeek extends Base {
 
             platform.effectOn()
             let image_url: any = await platform.screenshot()
-            platform.effectOff()
+            // platform.effectOff()
 
             requestBody.image_url = image_url
             this.requestChatCompletionsNotStream(requestBody, signal, onResultChange)
@@ -111,7 +121,7 @@ export default class DeepSeek extends Base {
     }
 
     async excuteAction(json: any) {
-        // platform.closeFirstWindow();
+        platform.closeFirstWindow();
         platform.showSecondWindow();
         const resolution = await platform.getResolution();
         const scaleX = resolution.width / 1000;

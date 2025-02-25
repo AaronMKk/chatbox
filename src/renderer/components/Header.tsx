@@ -1,32 +1,61 @@
-import { useEffect } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { Typography, useTheme } from '@mui/material'
 import * as atoms from '../stores/atoms'
-import { useAtomValue, useSetAtom } from 'jotai'
+import { useAtomValue } from 'jotai'
 import * as sessionActions from '../stores/sessionActions'
 import Toolbar from './Toolbar'
 import { cn } from '@/lib/utils'
+import platform from '@/packages/platform'
 
-interface Props { }
+interface Props {}
 
 export default function Header(props: Props) {
     const theme = useTheme()
     const currentSession = useAtomValue(atoms.currentSessionAtom)
-    const setChatConfigDialogSession = useSetAtom(atoms.chatConfigDialogAtom)
 
-    useEffect(() => {
-        if (
-            currentSession.name === 'Untitled'
-            && currentSession.messages.length >= 2
-        ) {
-            sessionActions.generateName(currentSession.id)
-            return 
-        }
-    }, [currentSession.messages.length])
+    const [dragging, setDragging] = useState(false)
+    const [startPos, setStartPos] = useState({ x: 0, y: 0 })
+    const [initialWindowPos, setInitialWindowPos] = useState({ x: 0, y: 0 })
+    const headerRef = useRef<HTMLDivElement>(null)
 
-    const editCurrentSession = () => {
-        setChatConfigDialogSession(currentSession)
+    // Minimize window
+    const minimizeWindow = () => {
+        platform.closeFirstWindow()
+    }
+    const handleMouseDown = (event: React.MouseEvent) => {
+        setDragging(true)
+        setStartPos({ x: event.clientX, y: event.clientY })
     }
 
+    const handleMouseMove = (event: MouseEvent) => {
+        if (!dragging || !headerRef.current) return
+
+        const deltaX = event.clientX - startPos.x
+        const deltaY = event.clientY - startPos.y
+
+        platform.sentPos(deltaX, deltaY)
+    }
+    const handleMouseUp = () => {
+        // End dragging
+        setDragging(false)
+    }
+    useEffect(() => {
+        const headerElement = headerRef.current
+
+        if (headerElement) {
+            headerElement.addEventListener('mousedown', handleMouseDown)
+            window.addEventListener('mousemove', handleMouseMove)
+            window.addEventListener('mouseup', handleMouseUp)
+        }
+
+        return () => {
+            if (headerElement) {
+                headerElement.removeEventListener('mousedown', handleMouseDown)
+            }
+            window.removeEventListener('mousemove', handleMouseMove)
+            window.removeEventListener('mouseup', handleMouseUp)
+        }
+    }, [dragging, startPos, initialWindowPos])
     return (
         <div
             className="pt-3 pb-2 px-4"
@@ -34,7 +63,10 @@ export default function Header(props: Props) {
                 borderBottomWidth: '1px',
                 borderBottomStyle: 'solid',
                 borderBottomColor: theme.palette.divider,
+                cursor: dragging ? 'grabbing' : 'grab', // Change cursor style when dragging
             }}
+            id="draggable-header"
+            ref={headerRef}
         >
             <div className={cn('w-full mx-auto flex flex-row')}>
                 <Typography
@@ -47,18 +79,17 @@ export default function Header(props: Props) {
                         overflow: 'hidden',
                         textOverflow: 'ellipsis',
                     }}
+                    onMouseDown={handleMouseDown}
                     className="flex items-center cursor-pointer"
-                    onClick={() => {
-                        editCurrentSession()
-                    }}
                 >
-                    {
-                        <Typography variant="h6" noWrap className={cn('max-w-56', 'ml-3')}>
-                            {currentSession.name}
-                        </Typography>
-                    }
+                    <Typography variant="h6" noWrap className={cn('max-w-56', 'ml-3')}>
+                        {currentSession.name}
+                    </Typography>
                 </Typography>
-                <Toolbar />
+                <div className="flex items-center">
+                    <button onClick={minimizeWindow} className="mr-2">_</button>
+                    <button onClick={minimizeWindow} className="mr-2">X</button>
+                </div>
             </div>
         </div>
     )

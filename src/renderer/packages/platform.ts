@@ -138,6 +138,9 @@ export class DesktopPlatform {
     public async showSecondWindow() {
         return this.ipc.invoke('show-second-window')
     }
+    public async sentPos(x: number, y: number) {
+        return this.ipc.invoke('send-position', x, y)
+    }
     // desgined for agent feature
 
 }

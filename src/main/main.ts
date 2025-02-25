@@ -70,6 +70,7 @@ const createWindow = async () => {
         show: false,
         width: 1000,
         height: 950,
+        titleBarStyle: 'hidden',
         icon: getAssetPath('icon.png'),
         webPreferences: {
             spellcheck: true,
@@ -109,10 +110,9 @@ const createWindow = async () => {
 
     // https://www.computerhope.com/jargon/m/menubar.htm
     mainWindow.setMenuBarVisibility(false)
-
     // second
     secondaryWindow = new BrowserWindow({
-        // show: false,
+        show: false,
         width: 160,
         height: 45,
         parent: mainWindow,
@@ -260,6 +260,9 @@ function createEffectWindow() {
         <body></body>
       </html>
     `);
+    setTimeout(() => {
+        removeEffectWindow();
+    }, 4000);
 }
 function removeEffectWindow() {
     if (effectWindow) {
@@ -267,6 +270,16 @@ function removeEffectWindow() {
         effectWindow = null;
     }
 }
+ipcMain.handle('send-position', (event, x, y) => {
+    if (mainWindow) {
+        mainWindow.setBounds({
+            x: mainWindow.getBounds().x + x,
+            y: mainWindow.getBounds().y + y,
+            width: mainWindow.getBounds().width,
+            height: mainWindow.getBounds().height,
+        })
+    }
+})
 ipcMain.handle('screenshot-effect-on', async (_, messgae) => {
     createEffectWindow()
     return true;
@@ -284,7 +297,7 @@ ipcMain.handle('send-thumbnail', async (_, messgae) => {
     return true;
 });
 ipcMain.handle('close-first-window', async () => {
-    mainWindow?.hide()
+    mainWindow?.minimize()
     return true;
 });
 ipcMain.handle('show-first-window', async () => {
@@ -292,7 +305,7 @@ ipcMain.handle('show-first-window', async () => {
     return true;
 });
 ipcMain.handle('close-second-window', async () => {
-    secondaryWindow?.hide()
+    secondaryWindow?.minimize()
     return true;
 });
 ipcMain.handle('show-second-window', async () => {

@@ -30,8 +30,6 @@ import { trackingEvent } from './packages/event'
 export const drawerWidth = 240
 
 interface Props {
-    openCopilotWindow(): void
-    openAboutWindow(): void
     setOpenSettingWindow(name: 'ai' | 'display' | null): void
 }
 
@@ -101,17 +99,6 @@ export default function Sidebar(props: Props) {
                             </Typography>
                         </MenuItem>
 
-                        <MenuItem onClick={props.openCopilotWindow} sx={{ padding: '0.2rem 0.1rem', margin: '0.1rem' }}>
-                            <ListItemIcon>
-                                <IconButton>
-                                    <SmartToyIcon fontSize="small" />
-                                </IconButton>
-                            </ListItemIcon>
-                            <ListItemText>
-                                <Typography>{t('My Copilots')}</Typography>
-                            </ListItemText>
-                        </MenuItem>
-
                         <MenuItem
                             onClick={() => {
                                 props.setOpenSettingWindow('ai')
@@ -127,27 +114,6 @@ export default function Sidebar(props: Props) {
                             <Typography variant="body2" color="text.secondary">
                                 {/* ⌘N */}
                             </Typography>
-                        </MenuItem>
-
-                        <MenuItem onClick={props.openAboutWindow} sx={{ padding: '0.2rem 0.1rem', margin: '0.1rem' }}>
-                            <ListItemIcon>
-                                <IconButton>
-                                    <InfoOutlinedIcon fontSize="small" />
-                                </IconButton>
-                            </ListItemIcon>
-                            <ListItemText>
-                                <Badge
-                                    color="primary"
-                                    variant="dot"
-                                    invisible={!versionHook.needCheckUpdate}
-                                    sx={{ paddingRight: '8px' }}
-                                >
-                                    <Typography sx={{ opacity: 0.5 }}>
-                                        {t('About')}
-                                        {/\d/.test(versionHook.version) ? `(${versionHook.version})` : ''}
-                                    </Typography>
-                                </Badge>
-                            </ListItemText>
                         </MenuItem>
                     </MenuList>
                 </Stack>

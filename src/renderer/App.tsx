@@ -25,14 +25,10 @@ function Main() {
 
     const [openAboutWindow, setOpenAboutWindow] = React.useState(false)
 
-    const [openCopilotWindow, setOpenCopilotWindow] = React.useState(false)
-
     return (
         <Box className="box-border App" spellCheck={spellCheck}>
             <Grid container className="h-full">
                 <Sidebar
-                    openCopilotWindow={() => setOpenCopilotWindow(true)}
-                    openAboutWindow={() => setOpenAboutWindow(true)}
                     setOpenSettingWindow={setOpenSettingWindow}
                 />
                 <MainPane />
@@ -45,7 +41,6 @@ function Main() {
             <AboutWindow open={openAboutWindow} close={() => setOpenAboutWindow(false)} />
             <ChatConfigWindow />
             <CleanWidnow />
-            <CopilotWindow open={openCopilotWindow} close={() => setOpenCopilotWindow(false)} />
             <RemoteDialogWindow />
             <Toasts />
         </Box>

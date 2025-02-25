@@ -1,4 +1,5 @@
 import { contextBridge, ipcRenderer, IpcRendererEvent } from 'electron'
+import { BrowserWindow } from 'electron/main';
 import { ElectronIPC } from 'src/shared/electron-types'
 
 const electronHandler: ElectronIPC = {
