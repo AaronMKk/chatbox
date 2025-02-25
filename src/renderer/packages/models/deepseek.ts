@@ -17,8 +17,8 @@ interface ActionInput {
 }
 function sleep(ms: number): Promise<void> {
     return new Promise(resolve => setTimeout(resolve, ms));
-  }
-  
+}
+
 export default class DeepSeek extends Base {
     public name = 'DeepSeek'
 
@@ -54,10 +54,12 @@ export default class DeepSeek extends Base {
         const conversation_id = rawMessages[1].id
 
         const messages = await populateGPTMessage(rawMessages)
+        // first screenshoot
         let image_url: any = await platform.screenshot()
         return this.requestChatCompletionsNotStream({ model, messages, image_url, conversation_id }, signal, onResultChange)
     }
     async requestChatCompletionsNotStream(requestBody: Record<string, any>, signal?: AbortSignal, onResultChange?: onResultChange): Promise<string> {
+        platform.sendThumbnail(requestBody.image_url)
         const apiPath = this.options.deepseekapiHost + '/v1/chat/completions'
         const response = await this.post(
             `${apiPath}`,
@@ -69,24 +71,26 @@ export default class DeepSeek extends Base {
         if (json.error) {
             throw new ApiError(`Error from DeepSeek: ${JSON.stringify(json)}`)
         }
-
         if (json.data.content.message.includes('END()')) {
-            // platform.resize(1, '');
-            return 'task should be fished'
+            platform.closeSecondWindow();
+            platform.showFirstWindow();
+            if (onResultChange) {
+                onResultChange('task should be fished')
+            }
         }
         if (json.data.content.type === 'exec') {
+            // platform.closeFirstWindow();
+            platform.showSecondWindow();
             if (onResultChange) {
-                onResultChange(json.data.content.message)
+                onResultChange(' \n 执行操作： \n ' + json.data.content.message)
             }
             platform.sendMessage(json.data.content.message)
-            this.excuteAction(json, json.data.content.message)
+            this.excuteAction(json)
             await sleep(1000)
             let image_url: any = await platform.screenshot()
-            platform.sendThumbnail(image_url)
             requestBody.image_url = image_url
             this.requestChatCompletionsNotStream(requestBody, signal, onResultChange)
         }
-        
         return json.data.content.message
     }
 
@@ -95,16 +99,12 @@ export default class DeepSeek extends Base {
             Authorization: `Bearer ${this.options.deepseekKey}`,
             'Content-Type': 'application/json',
         }
-        if (this.options.deepseekapiHost.includes('openrouter.ai')) {
-            headers['HTTP-Referer'] = 'https://chatboxai.app'
-            headers['X-Title'] = 'Chatbox AI'
-        }
         return headers
     }
-    
-    async excuteAction(json: any, message: String) {
-        console.warn(`>>>>>>>>>>>>>>>>>action: ${message}`);
-        // platform.resize(0, message);
+
+    async excuteAction(json: any) {
+        // platform.closeFirstWindow();
+        platform.showSecondWindow();
         const resolution = await platform.getResolution();
         const scaleX = resolution.width / 1000;
         const scaleY = resolution.height / 1000;

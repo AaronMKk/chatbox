@@ -134,6 +134,10 @@ export function modifyMessage(sessionId: string, updated: Message, refreshCounti
         return msgs.map((m) => {
             if (m.id === updated.id) {
                 hasHandled = true
+                if (m.content.includes(' \n 执行操作： \n ')) {
+                    updated.content = m.content + updated.content;
+                    return { ...updated }
+                }
                 return { ...updated }
             }
             return m

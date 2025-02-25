@@ -90,9 +90,6 @@ export class DesktopPlatform {
     }
 
     // desgined for agent feature
-    public async resize(state: Number, message: String) {
-        return this.ipc.invoke('resize', state, message)
-    }
     public async screenshot() {
         return this.ipc.invoke('screenshot')
     }
@@ -122,6 +119,18 @@ export class DesktopPlatform {
     }
     public async sendMessage(message: string) {
         return this.ipc.invoke('send-message', message)
+    }
+    public async closeFirstWindow() {
+        return this.ipc.invoke('close-first-window')
+    }
+    public async showFirstWindow() {
+        return this.ipc.invoke('show-first-window')
+    }
+    public async closeSecondWindow() {
+        return this.ipc.invoke('close-second-window')
+    }
+    public async showSecondWindow() {
+        return this.ipc.invoke('show-second-window')
     }
     // desgined for agent feature
 

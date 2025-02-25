@@ -190,7 +190,7 @@ const createWindow = async () => {
     secondaryWindow = new BrowserWindow({
         // show: false,
         width: 160,
-        height: 65,
+        height: 45,
         parent: mainWindow,
         modal: false,
         alwaysOnTop: true,
@@ -212,8 +212,8 @@ const createWindow = async () => {
     const x = Math.floor((screenWidth - windowWidth) / 2);
     const y = 0;
     
-    // Set the window position
-    secondaryWindow.setBounds({ x, y, width: windowWidth, height: 65 });
+    // Set the window position 
+    secondaryWindow.setBounds({ x, y, width: windowWidth, height: 48 });
     secondaryWindow.loadURL(resolveHtmlPath('secondary.html'));
 
     secondaryWindow.on('closed', () => {
@@ -252,7 +252,14 @@ app.whenReady()
     })
     .catch(console.log)
 
-
+ipcMain.handle('send-message', async (_, messgae) => {
+    secondaryWindow?.webContents.send('action', messgae)
+    return true;
+});   
+ipcMain.handle('send-thumbnail', async (_, messgae) => {
+    secondaryWindow?.webContents.send('thumbnail', messgae)
+    return true;
+});
 ipcMain.handle('close-first-window', async () => {
     mainWindow?.hide()
     return true;
@@ -267,14 +274,6 @@ ipcMain.handle('close-second-window', async () => {
 });
 ipcMain.handle('show-second-window', async () => {
     secondaryWindow?.show()
-    return true;
-});
-ipcMain.handle('send-message', async (_, messgae) => {
-    secondaryWindow?.webContents.send('action', messgae)
-    return true;
-});
-ipcMain.handle('send-thumbnail', async (_, base64) => {
-    secondaryWindow?.webContents.send('thumbnail', base64)
     return true;
 });
 
