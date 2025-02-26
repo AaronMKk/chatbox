@@ -5,9 +5,7 @@ import { Box, Grid } from '@mui/material'
 import SettingDialog from './pages/SettingDialog'
 import ChatConfigWindow from './pages/ChatConfigWindow'
 import CleanWidnow from './pages/CleanWindow'
-import AboutWindow from './pages/AboutWindow'
 import useAppTheme from './hooks/useAppTheme'
-import CopilotWindow from './pages/CopilotWindow'
 import { useI18nEffect } from './hooks/useI18nEffect'
 import Toasts from './components/Toasts'
 import RemoteDialogWindow from './pages/RemoteDialogWindow'
@@ -17,17 +15,19 @@ import { useAtom, useAtomValue } from 'jotai'
 import * as atoms from './stores/atoms'
 import Sidebar from './Sidebar'
 import * as premiumActions from './stores/premiumActions'
+import NaviBar from './NaviBar'
 
 function Main() {
     const spellCheck = useAtomValue(atoms.spellCheckAtom)
 
     const [openSettingWindow, setOpenSettingWindow] = useAtom(atoms.openSettingDialogAtom)
 
-    const [openAboutWindow, setOpenAboutWindow] = React.useState(false)
-
     return (
         <Box className="box-border App" spellCheck={spellCheck}>
             <Grid container className="h-full">
+                <NaviBar
+                    setOpenSettingWindow={setOpenSettingWindow}
+                />
                 <Sidebar
                     setOpenSettingWindow={setOpenSettingWindow}
                 />
@@ -38,11 +38,6 @@ function Main() {
                 targetTab={openSettingWindow || undefined}
                 close={() => setOpenSettingWindow(null)}
             />
-            <AboutWindow open={openAboutWindow} close={() => setOpenAboutWindow(false)} />
-            <ChatConfigWindow />
-            <CleanWidnow />
-            <RemoteDialogWindow />
-            <Toasts />
         </Box>
     )
 }

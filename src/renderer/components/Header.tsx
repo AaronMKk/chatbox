@@ -6,7 +6,12 @@ import * as sessionActions from '../stores/sessionActions'
 import Toolbar from './Toolbar'
 import { cn } from '@/lib/utils'
 import platform from '@/packages/platform'
-
+import ClearIcon from '@mui/icons-material/Clear';
+import MinimizeIcon from '@mui/icons-material/Minimize';
+import FullscreenIcon from '@mui/icons-material/Fullscreen';
+import { VscChromeMinimize } from "react-icons/vsc";
+import { VscChromeMaximize } from "react-icons/vsc";
+import { VscChromeClose } from "react-icons/vsc";
 interface Props {}
 
 export default function Header(props: Props) {
@@ -21,6 +26,9 @@ export default function Header(props: Props) {
     // Minimize window
     const minimizeWindow = () => {
         platform.closeFirstWindow()
+    }
+    const maxmizeWindow = () => {
+        platform.maxmizeFirstWindow()
     }
     const handleMouseDown = (event: React.MouseEvent) => {
         setDragging(true)
@@ -63,7 +71,8 @@ export default function Header(props: Props) {
                 borderBottomWidth: '1px',
                 borderBottomStyle: 'solid',
                 borderBottomColor: theme.palette.divider,
-                cursor: dragging ? 'grabbing' : 'grab', // Change cursor style when dragging
+                cursor: dragging ? 'grabbing' : 'grab',
+                height: "11%"
             }}
             id="draggable-header"
             ref={headerRef}
@@ -87,8 +96,15 @@ export default function Header(props: Props) {
                     </Typography>
                 </Typography>
                 <div className="flex items-center">
-                    <button onClick={minimizeWindow} className="mr-2">_</button>
-                    <button onClick={minimizeWindow} className="mr-2">X</button>
+                    <button onClick={minimizeWindow} className="mr-5 p-0 bg-transparent border-none text-lg">
+                        <VscChromeMinimize  />
+                    </button>
+                    <button onClick={maxmizeWindow} className="mr-5 p-0 bg-transparent border-none text-lg">
+                        <VscChromeMaximize  />
+                    </button>
+                    <button onClick={minimizeWindow} className="mr-2 p-0 bg-transparent border-none text-lg">
+                        <VscChromeClose  />
+                    </button>
                 </div>
             </div>
         </div>

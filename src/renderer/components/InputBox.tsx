@@ -76,6 +76,7 @@ export default function InputBox(props: Props) {
                 borderTopWidth: '1px',
                 borderTopStyle: 'solid',
                 borderTopColor: theme.palette.divider,
+                height: "60%",
             }}
         >
             <div className={cn('w-full mx-auto flex flex-col')}>

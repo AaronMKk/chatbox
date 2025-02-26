@@ -141,6 +141,9 @@ export class DesktopPlatform {
     public async sentPos(x: number, y: number) {
         return this.ipc.invoke('send-position', x, y)
     }
+    public async maxmizeFirstWindow() {
+        return this.ipc.invoke('max-first-win')
+    }
     // desgined for agent feature
 
 }

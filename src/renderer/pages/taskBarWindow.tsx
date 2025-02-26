@@ -23,10 +23,10 @@ const StyledTypography = styled(Typography)(({ theme }) => ({
   wordWrap: 'break-word',
   paddingLeft: theme.spacing(-1),
   paddingRight: theme.spacing(0),
-  maxHeight: '45px', // Ensure the height does not expand
+  maxHeight: '60px', // Ensure the height does not expand
   lineHeight: '1rem', // Ensure line height is manageable within 45px
   [theme.breakpoints.down('sm')]: {
-    fontSize: '0.65rem',
+    fontSize: '0.92rem',
   },
 }));
 
@@ -82,14 +82,14 @@ function ResponsiveAppBar() {
               <img
                 src={thumbnail}
                 alt="Thumbnail"
-                style={{ width: '75px', height: '45px', borderRadius: '5%' }}
+                style={{ width: '75px', height: '60px', borderRadius: '5%' }}
               />
             </ThumbnailBox>
           )}
 
           <Box sx={{ flexGrow: 0 }}>
             <IconButton sx={{ p: 0 }}>
-              <img style={{ width: '45px', height: '45px', objectFit: 'contain' }} src={require('../static/avatar.gif')} />
+              <img style={{ width: '60px', height: '60px', objectFit: 'contain' }} src={require('../static/avatar.gif')} />
             </IconButton>
           </Box>
         </Toolbar>

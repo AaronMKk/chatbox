@@ -4,6 +4,7 @@ import { useAtomValue } from 'jotai'
 import InputBox from './components/InputBox'
 import MessageList from './components/MessageList'
 import { drawerWidth } from './Sidebar'
+import { naviWidth } from './NaviBar'
 import Header from './components/Header'
 
 interface Props {}
@@ -16,7 +17,8 @@ export default function MainPane(props: Props) {
             className="h-full w-full"
             sx={{
                 flexGrow: 1,
-                marginLeft: `${drawerWidth}px`,
+                marginLeft: `${drawerWidth + naviWidth}px`,
+                backgroundColor: "#F5F5F5"
             }}
         >
             <div className="flex flex-col h-full">

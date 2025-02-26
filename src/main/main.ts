@@ -68,8 +68,8 @@ const createWindow = async () => {
     }
     mainWindow = new BrowserWindow({
         show: false,
-        width: 1000,
-        height: 950,
+        width: 910,
+        height: 660,
         titleBarStyle: 'hidden',
         icon: getAssetPath('icon.png'),
         webPreferences: {
@@ -114,7 +114,7 @@ const createWindow = async () => {
     secondaryWindow = new BrowserWindow({
         show: false,
         width: 160,
-        height: 45,
+        height: 80,
         parent: mainWindow,
         modal: false,
         alwaysOnTop: true,
@@ -137,7 +137,7 @@ const createWindow = async () => {
     const y = 0;
 
     // Set the window position 
-    secondaryWindow.setBounds({ x, y, width: windowWidth, height: 48 });
+    secondaryWindow.setBounds({ x, y, width: windowWidth, height: 60 });
     secondaryWindow.loadURL(resolveHtmlPath('secondary.html'));
 
     secondaryWindow.on('closed', () => {
@@ -262,7 +262,7 @@ function createEffectWindow() {
     `);
     setTimeout(() => {
         removeEffectWindow();
-    }, 4000);
+    }, 1000);
 }
 function removeEffectWindow() {
     if (effectWindow) {
@@ -312,7 +312,15 @@ ipcMain.handle('show-second-window', async () => {
     secondaryWindow?.show()
     return true;
 });
-
+ipcMain.handle('max-first-win', async () => {
+    const isMaximized = mainWindow?.isMaximized();
+    if (isMaximized) {
+        mainWindow?.unmaximize();
+    } else {
+        mainWindow?.maximize();
+    }
+    return true;
+});
 ipcMain.handle('screenshot', async () => {
     const primaryDisplayId = screen.getPrimaryDisplay().id;
     const sources = await desktopCapturer.getSources({ types: ['screen'], thumbnailSize: { width: screen.getPrimaryDisplay().size.width, height: screen.getPrimaryDisplay().size.height } });

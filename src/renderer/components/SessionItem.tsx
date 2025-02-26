@@ -44,7 +44,7 @@ function _SessionItem(props: Props) {
                 key={session.id}
                 selected={selected}
                 onClick={onClick}
-                sx={{ padding: '0.1rem', margin: '0.1rem' }}
+                sx={{ padding: '0.2rem', margin: '0.2rem' }}
                 className='group/session-item'
             >
                 <ListItemIcon>

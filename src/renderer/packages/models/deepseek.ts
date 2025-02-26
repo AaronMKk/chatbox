@@ -58,7 +58,9 @@ export default class DeepSeek extends Base {
 
         const messages = await populateGPTMessage(rawMessages)
         // first screenshoot
-        platform.effectOn()
+        // await platform.effectOn()
+        platform.closeFirstWindow();
+        platform.showSecondWindow();
         let image_url: any = await platform.screenshot()
         // platform.effectOff()
 
@@ -100,9 +102,11 @@ export default class DeepSeek extends Base {
             }
             platform.sendMessage(json.data.content.message)
             this.excuteAction(json)
-            await sleep(1000)
+            await sleep(2000)
 
-            platform.effectOn()
+            // await platform.effectOn()
+            platform.closeFirstWindow();
+            platform.showSecondWindow();
             let image_url: any = await platform.screenshot()
             // platform.effectOff()
 

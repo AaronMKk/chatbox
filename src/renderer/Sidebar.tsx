@@ -1,34 +1,23 @@
-import { useRef } from 'react'
+import { useRef, useState } from 'react'
 import {
     Box,
-    Badge,
-    ListItemText,
-    MenuList,
-    IconButton,
     Stack,
-    MenuItem,
-    ListItemIcon,
-    Typography,
     Divider,
     useTheme,
+    TextField,
+    IconButton,
+    InputAdornment,
 } from '@mui/material'
-import SettingsIcon from '@mui/icons-material/Settings'
-import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined'
 import { useTranslation } from 'react-i18next'
-import icon from './static/icon.png'
-import SmartToyIcon from '@mui/icons-material/SmartToy'
-import AddIcon from '@mui/icons-material/AddCircleOutline'
 import useVersion from './hooks/useVersion'
 import SessionList from './components/SessionList'
 import * as sessionActions from './stores/sessionActions'
-import MenuOpenIcon from '@mui/icons-material/MenuOpen'
-import { useSetAtom } from 'jotai'
-import * as atoms from './stores/atoms'
-import AddPhotoAlternateIcon from '@mui/icons-material/AddPhotoAlternate'
 import { trackingEvent } from './packages/event'
-
-export const drawerWidth = 240
-
+import { naviWidth } from './NaviBar'
+import { SearchIcon } from 'lucide-react'
+import AddIcon from '@mui/icons-material/Add';
+export const drawerWidth = 250
+import { VscSearch } from "react-icons/vsc";
 interface Props {
     setOpenSettingWindow(name: 'ai' | 'display' | null): void
 }
@@ -36,16 +25,8 @@ interface Props {
 export default function Sidebar(props: Props) {
     const { t } = useTranslation()
     const versionHook = useVersion()
-
+    const [searchQuery, setSearchQuery] = useState('')
     const sessionListRef = useRef<HTMLDivElement>(null)
-    const handleCreateNewSession = () => {
-        sessionActions.createEmpty('chat')
-        if (sessionListRef.current) {
-            sessionListRef.current.scrollTo(0, 0)
-        }
-        trackingEvent('create_new_conversation', { event_category: 'user' })
-    }
-
     const theme = useTheme()
 
     return (
@@ -57,65 +38,68 @@ export default function Sidebar(props: Props) {
                 borderRightWidth: '1px',
                 borderRightStyle: 'solid',
                 borderRightColor: theme.palette.divider,
+                marginLeft: naviWidth,
             }}
         >
             <div className="ToolBar h-full">
                 <Stack
-                    className="pt-3 pl-2 pr-1"
+                    className=""
                     sx={{
                         height: '100%',
+                        backgroundColor: '#E2E2E2',
                     }}
                 >
-                    <Box className="flex justify-between items-center px-2">
-                        <Box>
-                            <a
-                                href="https://www.kingsware.cn/"
-                                target="_blank"
-                                className="flex items-center no-underline"
-                            >
-                                <img src={icon} className="w-8 h-8 mr-3" />
-                                <div className="flex flex-col items-start">
-                                    <span className="text-2xl font-medium">Kingsware Agent</span>
-                                    <span className="text-[10px] opacity-50">Kingsware Edition</span>
-                                </div>
-                            </a>
-                        </Box>
+                    <Box className="flex justify-between items-center px-2" sx={{
+                        height: "9%",
+                        backgroundColor: '#F7F7F7',
+                    }}>
+                        <TextField
+                            sx={{
+                                backgroundColor: '#E2E2E2',
+                                borderRadius: '4px',
+                                '& .MuiOutlinedInput-root': {
+                                    '& fieldset': {
+                                        border: 'none',
+                                    },
+                                    '&:hover fieldset': {
+                                        border: 'none',
+                                    },
+                                    '&.Mui-focused fieldset': {
+                                        border: 'none',
+                                    },
+                                },
+                                fontSize: '0.875rem',
+                                marginRight: '10px',
+                                height: '26px',
+                                '& .MuiInputBase-root': {
+                                    height: '26px',
+                                },
+                            }}
+                            fullWidth
+                            variant="outlined"
+                            value={searchQuery}
+                            size="small"
+                            InputProps={{
+                                startAdornment: (
+                                    <InputAdornment position="start" sx={{ paddingLeft: '0px', paddingRight: 'px' }}>
+                                        <VscSearch fontSize="small" />
+                                    </InputAdornment>
+                                ),
+                            }}
+                        />
+
+                        <IconButton sx={{
+                            backgroundColor: '#f0f0f0',
+                            borderRadius: '4px',
+                            padding: '2.5px',
+                        }}>
+                            <AddIcon />
+                        </IconButton>
                     </Box>
 
                     <SessionList sessionListRef={sessionListRef} />
 
                     <Divider variant="fullWidth" />
-
-                    <MenuList sx={{ marginBottom: '20px' }}>
-                        <MenuItem onClick={handleCreateNewSession} sx={{ padding: '0.2rem 0.1rem', margin: '0.1rem' }}>
-                            <ListItemIcon>
-                                <IconButton>
-                                    <AddIcon fontSize="small" />
-                                </IconButton>
-                            </ListItemIcon>
-                            <ListItemText>{t('new chat')}</ListItemText>
-                            <Typography variant="body2" color="text.secondary">
-                                {/* ⌘N */}
-                            </Typography>
-                        </MenuItem>
-
-                        <MenuItem
-                            onClick={() => {
-                                props.setOpenSettingWindow('ai')
-                            }}
-                            sx={{ padding: '0.2rem 0.1rem', margin: '0.1rem' }}
-                        >
-                            <ListItemIcon>
-                                <IconButton>
-                                    <SettingsIcon fontSize="small" />
-                                </IconButton>
-                            </ListItemIcon>
-                            <ListItemText>{t('settings')}</ListItemText>
-                            <Typography variant="body2" color="text.secondary">
-                                {/* ⌘N */}
-                            </Typography>
-                        </MenuItem>
-                    </MenuList>
                 </Stack>
             </div>
         </div>
