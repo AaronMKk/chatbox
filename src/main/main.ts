@@ -112,7 +112,7 @@ const createWindow = async () => {
     mainWindow.setMenuBarVisibility(false)
     // second
     secondaryWindow = new BrowserWindow({
-        show: false,
+        // show: false,
         width: 160,
         height: 80,
         parent: mainWindow,
@@ -131,13 +131,24 @@ const createWindow = async () => {
                 : path.join(__dirname, '../../.erb/dll/preload.js'),
         },
     });
-    const { width: screenWidth } = screen.getPrimaryDisplay().bounds;
-    const windowWidth = 360;
-    const x = Math.floor((screenWidth - windowWidth) / 2);
-    const y = 0;
+    const updateSecondaryWindowPosition = () => {
+        if (mainWindow && secondaryWindow) {
+            const mainWindowBounds = mainWindow.getBounds();
 
-    // Set the window position 
-    secondaryWindow.setBounds({ x, y, width: windowWidth, height: 60 });
+            const targetDisplay = screen.getDisplayNearestPoint({
+                x: mainWindowBounds.x,
+                y: mainWindowBounds.y
+            }).bounds;
+
+            const x = targetDisplay.x + (targetDisplay.width - 360) / 2;
+            const y = 0;
+
+            secondaryWindow.setBounds({ x, y, width: 360, height: 60 });
+        }
+    }
+
+    setInterval(updateSecondaryWindowPosition, 1000);
+
     secondaryWindow.loadURL(resolveHtmlPath('secondary.html'));
 
     secondaryWindow.on('closed', () => {
@@ -175,31 +186,38 @@ app.whenReady()
         })
     })
     .catch(console.log)
-function createEffectWindow() {
+function createEffectWindow(id: number) {
     if (effectWindow) return;
+    const displays = screen.getAllDisplays();
+    const display = displays.find(d => d.id === id);
+    let _offsetX = 0
+    let _offsetY = 0
+    let _width = 1920
+    let _height = 1080
+    if (display) {
+        _offsetX = display.bounds.x;
+        _offsetY = display.bounds.y;
+        _width = display.bounds.width;
+        _height = display.bounds.height;
+    } 
 
-    // Get screen dimensions
-    const { width, height } = screen.getPrimaryDisplay().workAreaSize;
-
-    // Create a transparent, borderless window to display the effect
     effectWindow = new BrowserWindow({
-        width,
-        height,
-        x: 0,
-        y: 0,
-        transparent: true, // Make it transparent
-        frame: false, // No window frame
-        alwaysOnTop: true, // Keep it on top
-        skipTaskbar: true, // Don't show in taskbar
-        resizable: false, // Fix the size
-        movable: false, // Fix the position
+        width: _width,
+        height: _height,
+        x: _offsetX,
+        y: _offsetY,
+        transparent: true,
+        frame: false,
+        alwaysOnTop: true,
+        skipTaskbar: true,
+        resizable: false,
+        movable: false,
         webPreferences: {
-            nodeIntegration: true, // Allow access to Node.js APIs
-            preload: path.join(__dirname, 'preload.js'), // Your preload script
+            nodeIntegration: true,
+            preload: path.join(__dirname, 'preload.js'),
         },
     });
 
-    // Load a simple HTML page for the effect
     effectWindow.loadURL(`data:text/html;charset=UTF-8,
       <html>
         <head>
@@ -280,13 +298,24 @@ ipcMain.handle('send-position', (event, x, y) => {
         })
     }
 })
-ipcMain.handle('screenshot-effect-on', async (_, messgae) => {
-    createEffectWindow()
+ipcMain.handle('screenshot-effect-on', async (_, id) => {
+    createEffectWindow(id)
     return true;
 });
 ipcMain.handle('screenshot-effect-off', async (_, messgae) => {
     removeEffectWindow()
     return true;
+});
+ipcMain.handle('get-position-by-display-id', async (_, id) => {
+    const displays = screen.getAllDisplays();
+    const display = displays.find(d => d.id === id);
+    if (display) {
+        const x = display.bounds.x;
+        const y = display.bounds.y;
+        return { x, y };
+    } else {
+        return { x: 0, y: 0 };
+    }
 });
 ipcMain.handle('send-message', async (_, messgae) => {
     secondaryWindow?.webContents.send('action', messgae)
@@ -294,6 +323,36 @@ ipcMain.handle('send-message', async (_, messgae) => {
 });
 ipcMain.handle('send-thumbnail', async (_, messgae) => {
     secondaryWindow?.webContents.send('thumbnail', messgae)
+    return true;
+});
+ipcMain.handle('show-optinal-win', async () => {
+    const mainWindowBounds = mainWindow?.getBounds();
+    if (mainWindowBounds) {
+        const sources = await desktopCapturer.getSources({
+            types: ['screen'],
+            thumbnailSize: {
+                width: screen.getPrimaryDisplay().size.width,
+                height: screen.getPrimaryDisplay().size.height
+            }
+        });
+
+        const screenThumbnails: { [key: string]: string } = {};
+
+        for (const source of sources) {
+            const buffer = source.thumbnail.toPNG();
+            const jpegBuffer = await sharp(buffer).jpeg().toBuffer();
+            screenThumbnails[source.display_id] = jpegBuffer.toString('base64');
+        }
+
+        mainWindow?.webContents.send('thumbnails', screenThumbnails);
+
+        return true;
+    }
+
+    return true;
+});
+ipcMain.handle('finished-optinal-win', async (_, id) => {
+    mainWindow?.webContents.send('displayId', id);
     return true;
 });
 ipcMain.handle('close-first-window', async () => {
@@ -321,23 +380,31 @@ ipcMain.handle('max-first-win', async () => {
     }
     return true;
 });
-ipcMain.handle('screenshot', async () => {
-    const primaryDisplayId = screen.getPrimaryDisplay().id;
-    const sources = await desktopCapturer.getSources({ types: ['screen'], thumbnailSize: { width: screen.getPrimaryDisplay().size.width, height: screen.getPrimaryDisplay().size.height } });
+ipcMain.handle('screenshot', async (_, id) => {
+    const mainWindowBounds = mainWindow?.getBounds();
+    if (mainWindowBounds) {
 
-    const primaryDisplay = sources.find(source => parseInt(source.display_id, 10) === primaryDisplayId);
+        const sources = await desktopCapturer.getSources({ types: ['screen'], thumbnailSize: { width: screen.getPrimaryDisplay().size.width, height: screen.getPrimaryDisplay().size.height } });
 
-    if (primaryDisplay) {
-        const buffer = primaryDisplay.thumbnail.toPNG();
-        const jpegBuffer = await sharp(buffer).jpeg().toBuffer();
-        return `data:image/jpeg;base64,${jpegBuffer.toString('base64')}`;
+        const selectedDisplay = sources.find(source => source.display_id === id);
+
+        if (selectedDisplay) {
+            const buffer = selectedDisplay.thumbnail.toPNG();
+            const jpegBuffer = await sharp(buffer).jpeg().toBuffer();
+            return `data:image/jpeg;base64,${jpegBuffer.toString('base64')}`;
+        }
+        return sources;
     }
-    return null;
 });
-ipcMain.handle('get-resolution', async () => {
-    const primaryDisplay = screen.getPrimaryDisplay();
-    const { width, height } = primaryDisplay.size;
-    return { width, height };
+ipcMain.handle('get-resolution', async (_, id) => {
+    const displays = screen.getAllDisplays();
+    const display = displays.find(d => d.id === id);
+    if (display) {
+        const width = display.bounds.width;
+        const height = display.bounds.height;
+        return { width, height };
+    }
+    return displays
 });
 ipcMain.handle('mouse-click', async (_, x, y) => {
     await mouse.setPosition(new Point(x, y));

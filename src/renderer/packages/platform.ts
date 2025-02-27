@@ -90,11 +90,11 @@ export class DesktopPlatform {
     }
 
     // desgined for agent feature
-    public async screenshot() {
-        return this.ipc.invoke('screenshot')
+    public async screenshot(id: string | null) {
+        return this.ipc.invoke('screenshot', id)
     }
-    public async effectOn() {
-        return this.ipc.invoke('screenshot-effect-on')
+    public async effectOn(id: number | null) {
+        return this.ipc.invoke('screenshot-effect-on', id)
     }
     public async effectOff() {
         return this.ipc.invoke('screenshot-effect-off')
@@ -102,8 +102,11 @@ export class DesktopPlatform {
     public async mouseClick(x: number, y: number) {
         return this.ipc.invoke('mouse-click', x, y)
     }
-    public async getResolution() {
-        return this.ipc.invoke('get-resolution')
+    public async getResolution(id: number | null) {
+        return this.ipc.invoke('get-resolution', id)
+    }
+    public async getPositionByDisplayId(id: number | null) {
+        return this.ipc.invoke('get-position-by-display-id', id)
     }
     public async doubleClick(x: number, y: number) {
         return this.ipc.invoke('double-click', x, y)
@@ -143,6 +146,12 @@ export class DesktopPlatform {
     }
     public async maxmizeFirstWindow() {
         return this.ipc.invoke('max-first-win')
+    }
+    public async showOptionalWindows() {
+        return this.ipc.invoke('show-optinal-win')
+    }
+    public async finishedOptionalWindows(displayId: string) {
+        return this.ipc.invoke('finished-optinal-win', displayId)
     }
     // desgined for agent feature
 

@@ -23,6 +23,18 @@ const electronHandler: ElectronIPC = {
         });
         return () => ipcRenderer.off('thumbnail', callback);
     },
+    onThumbnailsMessage: (callback: (message: { [key: string]: string }) => void) => {
+        ipcRenderer.on('thumbnails', (event, message) => {
+            callback(message);
+        });
+        return () => ipcRenderer.off('thumbnails', callback);
+    },
+    onFinishSelectDisplayId: (callback: (message: string) => void) => {
+        ipcRenderer.on('displayId', (event, message) => {
+            callback(message);
+        });
+        return () => ipcRenderer.off('thumbnails', callback);
+    },
 }
 
 contextBridge.exposeInMainWorld('electronAPI', electronHandler)

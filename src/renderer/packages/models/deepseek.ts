@@ -2,7 +2,6 @@ import { Message } from 'src/shared/types'
 import { ApiError, ChatboxAIAPIError } from './errors'
 import Base, { onResultChange } from './base'
 import platform from '@/packages/platform'
-
 interface Options {
     deepseekKey: string
     deepseekapiHost: string
@@ -24,23 +23,39 @@ function sleep(ms: number): Promise<void> {
 
 export default class DeepSeek extends Base {
     public name = 'DeepSeek'
-
+    private selectedDisplayId: number | null = null;
     public options: Options
     constructor(options: Options) {
         super()
         this.options = options
-        if (this.options.deepseekapiHost && this.options.deepseekapiHost.trim().length === 0) {
-            this.options.deepseekapiHost = 'http://127.0.0.1:5000'
-        }
         if (!this.options.deepseekapiHost) {
             this.options.deepseekapiHost = 'http://127.0.0.1:5000'
         }
         if (!this.options.deepseekModel) {
             this.options.deepseekModel = 'KingsWare 通用领域大模型'
         }
+        this.initDisplayId();
+    }
+    async initDisplayId() {
+        return new Promise<void>((resolve) => {
+            const handleDisplayId = (id: string) => {
+                this.selectedDisplayId = Number(id);
+                resolve();
+            };
+
+            window.electronAPI?.onFinishSelectDisplayId(handleDisplayId);
+        });
+    }
+
+    async waitForDisplayId() {
+        while (this.selectedDisplayId === null) {
+            await sleep(1000);
+        }
     }
     async callChatCompletion(rawMessages: Message[], signal?: AbortSignal, onResultChange?: onResultChange): Promise<string> {
         try {
+            platform.showOptionalWindows()
+            await this.waitForDisplayId()
             return await this._callChatCompletion(rawMessages, signal, onResultChange)
         } catch (e) {
             if (e instanceof ApiError && e.message.includes('Invalid content type. image_url is only supported by certain models.')) {
@@ -57,13 +72,16 @@ export default class DeepSeek extends Base {
         const conversation_id = rawMessages[1].id
 
         const messages = await populateGPTMessage(rawMessages)
+        
         // first screenshoot
-        // await platform.effectOn()
-        platform.closeFirstWindow();
-        platform.showSecondWindow();
-        let image_url: any = await platform.screenshot()
-        // platform.effectOff()
+        let _ = await platform.effectOn(this.selectedDisplayId)
+        await sleep(1000)
 
+        let image_url = ''
+        if (this.selectedDisplayId) {
+            image_url = await platform.screenshot(String(this.selectedDisplayId))
+        }
+    
         return this.requestChatCompletionsNotStream({
             model,
             messages,
@@ -93,27 +111,21 @@ export default class DeepSeek extends Base {
             if (onResultChange) {
                 onResultChange('task should be fished')
             }
+            return ''
         }
         if (json.data.content.type === 'exec') {
-            platform.closeFirstWindow();
-            platform.showSecondWindow();
+            
             if (onResultChange) {
-                onResultChange(' \n 执行操作： \n ' + json.data.content.message)
+                onResultChange(json.data.content.message)
             }
             platform.sendMessage(json.data.content.message)
             this.excuteAction(json)
-            await sleep(2000)
-
-            // await platform.effectOn()
-            platform.closeFirstWindow();
-            platform.showSecondWindow();
-            let image_url: any = await platform.screenshot()
-            // platform.effectOff()
-
-            requestBody.image_url = image_url
-            this.requestChatCompletionsNotStream(requestBody, signal, onResultChange)
+            return ''
         }
-        return json.data.content.message
+        if (onResultChange) {
+            onResultChange(json.data.content.message)
+        }
+        return ''
     }
 
     getHeaders() {
@@ -127,13 +139,19 @@ export default class DeepSeek extends Base {
     async excuteAction(json: any) {
         platform.closeFirstWindow();
         platform.showSecondWindow();
-        const resolution = await platform.getResolution();
+        const resolution = await platform.getResolution(this.selectedDisplayId);
+        let offsetX = 0, offsetY = 0; // Define default values
+        if (this.selectedDisplayId) {
+            const { x, y } = await platform.getPositionByDisplayId(this.selectedDisplayId);
+            offsetX = x;  // Assign values
+            offsetY = y;
+        }
+        
         const scaleX = resolution.width / 1000;
         const scaleY = resolution.height / 1000;
 
         // Updated mapping: functions now accept parameters
         const actionMap: { [key: string]: (...params: any[]) => Promise<any> } = {
-            'screenshot': async () => await platform.screenshot(),
             'CLICK': async (x: number, y: number) => await platform.mouseClick(x, y),
             'DOUBLE_CLICK': async (x: number, y: number) => await platform.mouseClick(x, y),
             'SCROLL_DOWN': async (mt: number) => await platform.mouseScrollDown(mt),
@@ -155,7 +173,7 @@ export default class DeepSeek extends Base {
                 case 'DOUBLE_CLICK':
                     if (input.coordinate) {
                         const [x, y] = input.coordinate;
-                        params = [x * scaleX, y * scaleY];
+                        params = [x * scaleX + offsetX, y * scaleY + offsetY];
                     }
                     break;
                 case 'SCROLL_DOWN':
@@ -167,7 +185,7 @@ export default class DeepSeek extends Base {
                 case 'TYPE':
                     if (input.coordinate && input.text) {
                         const [x, y] = input.coordinate;
-                        params = [x * scaleX, y * scaleY, input.text];
+                        params = [x * scaleX + offsetX, y * scaleY + offsetY, input.text];
                     }
                     break;
                 case 'KEY_PRESS':
