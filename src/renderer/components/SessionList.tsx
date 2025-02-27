@@ -56,35 +56,36 @@ export default function SessionList(props: Props) {
         }
     }
     return (
-        <MenuList
-            sx={{
-                width: '100%',
-                overflow: 'auto',
-                '& ul': { padding: 0 },
-                flexGrow: 1,
-            }}
-            component="div"
-            ref={props.sessionListRef}
-        >
-            <DndContext
-                modifiers={[restrictToVerticalAxis]}
-                sensors={sensors}
-                collisionDetection={closestCenter}
-                onDragEnd={onDragEnd}
+        <div className='overflow-y-auto w-full h-full pr-0 pl-0'>
+            <MenuList
+                sx={{
+                    width: '100%',
+                    '& ul': { padding: 0 },
+                    flexGrow: 1,
+                }}
+                component="div"
+                ref={props.sessionListRef}
             >
-                <SortableContext items={sortedSessions} strategy={verticalListSortingStrategy}>
-                    {sortedSessions.map((session, ix) => (
-                        <SortableItem key={session.id} id={session.id}>
-                            <SessionItem
-                                key={session.id}
-                                selected={currentSessionId === session.id}
-                                session={session}
-                            />
-                        </SortableItem>
-                    ))}
-                </SortableContext>
-            </DndContext>
-        </MenuList>
+                <DndContext
+                    modifiers={[restrictToVerticalAxis]}
+                    sensors={sensors}
+                    collisionDetection={closestCenter}
+                    onDragEnd={onDragEnd}
+                >
+                    <SortableContext items={sortedSessions} strategy={verticalListSortingStrategy}>
+                        {sortedSessions.map((session, ix) => (
+                            <SortableItem key={session.id} id={session.id}>
+                                <SessionItem
+                                    key={session.id}
+                                    selected={currentSessionId === session.id}
+                                    session={session}
+                                />
+                            </SortableItem>
+                        ))}
+                    </SortableContext>
+                </DndContext>
+            </MenuList>
+        </div >
     )
 }
 

@@ -72,7 +72,7 @@ export default function Header(props: Props) {
                 borderBottomStyle: 'solid',
                 borderBottomColor: theme.palette.divider,
                 cursor: dragging ? 'grabbing' : 'grab',
-                height: "11%"
+                height: "12%"
             }}
             id="draggable-header"
             ref={headerRef}
