@@ -6,6 +6,7 @@ import IconButton from '@mui/material/IconButton';
 import Typography from '@mui/material/Typography';
 import StopCircleIcon from '@mui/icons-material/StopCircle';
 import { styled } from '@mui/system';
+import customPlatform from '@/packages/platform'; // Renaming second import
 
 const StyledTypography = styled(Typography)(({ theme }) => ({
   display: 'flex',
@@ -37,7 +38,9 @@ const ThumbnailBox = styled(Box)(({ theme }) => ({
   marginLeft: theme.spacing(0),
   marginRight: theme.spacing(0),
 }));
-
+const handleForceStop = () => {
+    customPlatform.forceStop(true)
+    }
 function ResponsiveAppBar() {
   const [logoText, setLogoText] = React.useState('LOGO');
   const [thumbnail, setThumbnailContent] = React.useState('');
@@ -66,33 +69,35 @@ function ResponsiveAppBar() {
 
   return (
     <AppBar position="sticky" sx={{ boxShadow: 2, backgroundColor: 'primary.main' }}>
-        <Toolbar disableGutters>
-          <Box sx={{ display: { xs: 'flex', md: 'none' }, justifyContent: 'flex-start' }}>
-            <IconButton size="large" color="inherit">
-              <StopCircleIcon />
-            </IconButton>
-          </Box>
+      <Toolbar disableGutters>
+        <Box sx={{ display: { xs: 'flex', md: 'none' }, justifyContent: 'flex-start' }}>
+          <IconButton size="large" color="inherit" onClick={() => {
+            handleForceStop()
+          }}>
+            <StopCircleIcon />
+          </IconButton>
+        </Box>
 
-          <StyledTypography variant="h6" noWrap component="a" href="#app-bar-with-responsive-menu">
-            {logoText}
-          </StyledTypography>
+        <StyledTypography variant="h6" noWrap component="a" href="#app-bar-with-responsive-menu">
+          {logoText}
+        </StyledTypography>
 
-          {thumbnail && (
-            <ThumbnailBox>
-              <img
-                src={thumbnail}
-                alt="Thumbnail"
-                style={{ width: '75px', height: '60px', borderRadius: '5%' }}
-              />
-            </ThumbnailBox>
-          )}
+        {thumbnail && (
+          <ThumbnailBox>
+            <img
+              src={thumbnail}
+              alt="Thumbnail"
+              style={{ width: '75px', height: '60px', borderRadius: '5%' }}
+            />
+          </ThumbnailBox>
+        )}
 
-          <Box sx={{ flexGrow: 0 }}>
-            <IconButton sx={{ p: 0 }}>
-              <img style={{ width: '60px', height: '60px', objectFit: 'contain' }} src={require('../static/avatar.gif')} />
-            </IconButton>
-          </Box>
-        </Toolbar>
+        <Box sx={{ flexGrow: 0 }}>
+          <IconButton sx={{ p: 0 }}>
+            <img style={{ width: '60px', height: '60px', objectFit: 'contain' }} src={require('../static/avatar.gif')} />
+          </IconButton>
+        </Box>
+      </Toolbar>
     </AppBar>
   );
 }

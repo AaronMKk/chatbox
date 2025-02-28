@@ -10,7 +10,7 @@ export const defaultSessionsForEN: Session[] = [
                 id: 'a700be6c-cbdd-43a3-b572-49e7a921c059',
                 role: 'system',
                 content:
-                    'You are a helpful assistant. You can help me by answering my questions. You can also ask me questions.',
+                    'Kingsware helping enterprises quickly enter the AI era.',
             },
         ],
     },
@@ -23,7 +23,7 @@ export const defaultSessionsForEN: Session[] = [
                 id: '83240028-9d8b-43f2-87f2-a0a2be4dbf08',
                 role: 'system',
                 content:
-                    'You are a helpful assistant. You can help me by answering my questions. You can also ask me questions.',
+                    'Kingsware helping enterprises quickly enter the AI era.',
             },
             {
                 id: '430a7c50-39be-4aa4-965b-2bc56383c6cf',

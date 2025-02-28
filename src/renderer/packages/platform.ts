@@ -90,6 +90,9 @@ export class DesktopPlatform {
     }
 
     // desgined for agent feature
+    public async forceStop(id: boolean | null) {
+        return this.ipc.invoke('force-stop', id)
+    }
     public async screenshot(id: string | null) {
         return this.ipc.invoke('screenshot', id)
     }

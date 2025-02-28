@@ -65,7 +65,7 @@ export function newConfigs(): Config {
 }
 
 export function getDefaultPrompt() {
-    return 'You are a helpful assistant. You can help me by answering my questions. You can also ask me questions.'
+    return 'Kingsware helping enterprises quickly enter the AI era.'
 }
 
 export function sessions(): Session[] {

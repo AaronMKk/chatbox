@@ -48,7 +48,7 @@ export default class OpenAI extends Base {
 
         rawMessages = injectModelSystemPrompt(model, rawMessages)
 
-        if (true) {
+        if (model.startsWith('o1')) {
             const messages = await populateO1Message(rawMessages)
             return this.requestChatCompletionsNotStream({ model, messages }, signal, onResultChange)
         }

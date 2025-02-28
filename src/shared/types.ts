@@ -3,6 +3,7 @@ import { Model } from '../renderer/packages/models/openai'
 import * as siliconflow from '../renderer/packages/models/siliconflow'
 import { ClaudeModel } from '../renderer/packages/models/claude'
 import { deepseekModel } from '../renderer/packages/models/deepseek'
+import { settings } from './defaults'
 
 export const MessageRoleEnum = {
     System: 'system',

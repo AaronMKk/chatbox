@@ -4,6 +4,7 @@ import {
     createMessage,
     Message,
     Session,
+    MessageRoleEnum,
 } from '../../shared/types'
 import * as atoms from './atoms'
 import * as promptFormat from '../packages/prompts'
@@ -129,7 +130,16 @@ export function modifyMessage(sessionId: string, updated: Message, refreshCounti
     
     updated.timestamp = new Date().getTime()
     if (insertAsNew && updated.content) {
-        const newAction = createMessage('assistant', updated.content)
+        const settings = store.get(atoms.settingsAtom)
+        const newAction = {
+            id: uuidv4(),
+            content: updated.content,
+            role: MessageRoleEnum.Assistant,
+            timestamp: new Date().getTime(),
+            model: settings.deepseekModel,
+            tokenCount: updated.tokenCount = estimateTokensFromMessages([updated]),
+            wordCount: countWord(updated.content)
+        }
         insertMessage(sessionId, newAction)
         return
     }
@@ -183,7 +193,7 @@ export async function generate(sessionId: string, targetMsg: Message) {
     if (!autoGenerateTitle) {
         return
     }
-    const placeholder = '...'
+    const placeholder = '思考中'
     targetMsg = {
         ...targetMsg,
         content: placeholder,
@@ -219,6 +229,9 @@ export async function generate(sessionId: string, targetMsg: Message) {
                     generating: false,
                     cancel: undefined,
                     tokensUsed: estimateTokensFromMessages([...promptMsgs, targetMsg]),
+                }
+                if (settings.aiProvider == 'deepseek') {
+                    break
                 }
                 modifyMessage(sessionId, targetMsg, true)
                 break

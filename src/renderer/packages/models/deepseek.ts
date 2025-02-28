@@ -2,7 +2,7 @@ import { Message } from 'src/shared/types'
 import { ApiError, ChatboxAIAPIError } from './errors'
 import Base, { onResultChange } from './base'
 import platform from '@/packages/platform'
-import { insertMessage } from '@/stores/sessionActions'
+
 interface Options {
     deepseekKey: string
     deepseekapiHost: string
@@ -25,6 +25,7 @@ function sleep(ms: number): Promise<void> {
 export default class DeepSeek extends Base {
     public name = 'DeepSeek'
     private selectedDisplayId: number | null = null;
+    private forceStop: boolean | null = null;
     private continureWork: boolean | null = null;
     private regularChat: boolean | null = true;
     public options: Options
@@ -38,31 +39,57 @@ export default class DeepSeek extends Base {
             this.options.deepseekModel = 'KingsWare 通用领域大模型'
         }
         this.initDisplayId();
+        this.listenToStopSign();
     }
     async initDisplayId() {
         return new Promise<void>((resolve) => {
-            const handleDisplayId = (id: string) => {
-                this.selectedDisplayId = Number(id);
+            const storedDisplayId = localStorage.getItem('selectedDisplayId');
+
+            if (storedDisplayId) {
+                this.selectedDisplayId = Number(storedDisplayId);
+                resolve();
+            } else {
+                const handleDisplayId = (id: string) => {
+                    this.selectedDisplayId = Number(id);
+                    localStorage.setItem('selectedDisplayId', id);
+                    resolve();
+                };
+
+                window.electronAPI?.onFinishSelectDisplayId(handleDisplayId);
+            }
+        });
+    }
+    async showFirstWin() {
+        platform.closeSecondWindow();
+        platform.showFirstWindow();
+    }
+    async showSecondWin() {
+        platform.closeSecondWindow();
+        platform.showFirstWindow();
+    }
+    async listenToStopSign() {
+        return new Promise<void>((resolve) => {
+            const handleFroceStop = (id: boolean) => {
+                this.forceStop = id;
                 resolve();
             };
 
-            window.electronAPI?.onFinishSelectDisplayId(handleDisplayId);
+            window.electronAPI?.onForceStop(handleFroceStop);
         });
     }
-
     async waitForDisplayId() {
         while (this.selectedDisplayId === null) {
             await sleep(1000);
         }
     }
-    
+
     async callChatCompletion(rawMessages: Message[], signal?: AbortSignal, onResultChange?: onResultChange): Promise<string> {
         try {
             if (!this.selectedDisplayId) {
                 platform.showOptionalWindows()
                 await this.waitForDisplayId()
             }
-            
+
             return await this._callChatCompletion(rawMessages, signal, onResultChange)
         } catch (e) {
             if (e instanceof ApiError && e.message.includes('Invalid content type. image_url is only supported by certain models.')) {
@@ -79,11 +106,8 @@ export default class DeepSeek extends Base {
         const conversation_id = rawMessages[1].id
 
         const messages = await populateGPTMessage(rawMessages)
-        
-        // first screenshoot
-        let _ = await platform.effectOn(this.selectedDisplayId)
-        await sleep(1000)
 
+        // take first screenshoot silently
         let image_url = ''
         if (this.selectedDisplayId) {
             image_url = await platform.screenshot(String(this.selectedDisplayId))
@@ -97,9 +121,16 @@ export default class DeepSeek extends Base {
             temperature: this.options.temperature,
             top_p: this.options.topP,
             repetition_penalty: this.options.repetition_penalty,
-         }, signal, onResultChange)
+        }, signal, onResultChange)
     }
     async requestChatCompletionsNotStream(requestBody: Record<string, any>, signal?: AbortSignal, onResultChange?: onResultChange): Promise<string> {
+        if (this.forceStop) {
+            this.continureWork = false
+            if (onResultChange) {
+                onResultChange('froce stopped agent')
+            }
+            return ''
+        }
         platform.sendThumbnail(requestBody.image_url)
         const apiPath = this.options.deepseekapiHost + '/v1/chat/completions'
         const response = await this.post(
@@ -114,8 +145,7 @@ export default class DeepSeek extends Base {
         }
         if (json.data.content.message.includes('END()')) {
             this.continureWork = false
-            platform.closeSecondWindow();
-            platform.showFirstWindow();
+
             if (onResultChange) {
                 onResultChange('task should be fished')
             }
@@ -129,6 +159,11 @@ export default class DeepSeek extends Base {
             platform.sendMessage(json.data.content.message)
             this.excuteAction(json)
         }
+        if (json.data.content.plan_response) {
+            if (onResultChange) {
+                onResultChange(json.data.content.plan_response.message)
+            }
+        }
         if (this.continureWork) {
             if (this.selectedDisplayId) {
                 // upcoming screenshoot
@@ -136,14 +171,9 @@ export default class DeepSeek extends Base {
                 await sleep(1000)
                 requestBody.image_url = await platform.screenshot(String(this.selectedDisplayId))
             }
-            this.requestChatCompletionsNotStream({
-                requestBody,
-                temperature: this.options.temperature,
-                top_p: this.options.topP,
-                repetition_penalty: this.options.repetition_penalty,
-             }, signal, onResultChange)
+            this.requestChatCompletionsNotStream(requestBody, signal, onResultChange)
         }
-        if (this.regularChat) {
+        if (this.regularChat && !json.data.content.plan_response) {
             if (onResultChange) {
                 onResultChange(json.data.content.message)
             }
@@ -169,7 +199,7 @@ export default class DeepSeek extends Base {
             offsetX = x;
             offsetY = y;
         }
-        
+
         const scaleX = resolution.width / 1000;
         const scaleY = resolution.height / 1000;
 

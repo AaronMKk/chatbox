@@ -282,6 +282,7 @@ function createEffectWindow(id: number) {
         removeEffectWindow();
     }, 1000);
 }
+
 function removeEffectWindow() {
     if (effectWindow) {
         effectWindow.close();
@@ -298,6 +299,10 @@ ipcMain.handle('send-position', (event, x, y) => {
         })
     }
 })
+ipcMain.handle('force-stop', async (_, messgae) => {
+    mainWindow?.webContents.send('forceStop', messgae)
+    return true;
+});
 ipcMain.handle('screenshot-effect-on', async (_, id) => {
     createEffectWindow(id)
     return true;
