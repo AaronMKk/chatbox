@@ -2,6 +2,7 @@ import { Message } from 'src/shared/types'
 import { ApiError, ChatboxAIAPIError } from './errors'
 import Base, { onResultChange } from './base'
 import platform from '@/packages/platform'
+import { insertMessage } from '@/stores/sessionActions'
 interface Options {
     deepseekKey: string
     deepseekapiHost: string
@@ -24,6 +25,8 @@ function sleep(ms: number): Promise<void> {
 export default class DeepSeek extends Base {
     public name = 'DeepSeek'
     private selectedDisplayId: number | null = null;
+    private continureWork: boolean | null = null;
+    private regularChat: boolean | null = true;
     public options: Options
     constructor(options: Options) {
         super()
@@ -52,10 +55,14 @@ export default class DeepSeek extends Base {
             await sleep(1000);
         }
     }
+    
     async callChatCompletion(rawMessages: Message[], signal?: AbortSignal, onResultChange?: onResultChange): Promise<string> {
         try {
-            platform.showOptionalWindows()
-            await this.waitForDisplayId()
+            if (!this.selectedDisplayId) {
+                platform.showOptionalWindows()
+                await this.waitForDisplayId()
+            }
+            
             return await this._callChatCompletion(rawMessages, signal, onResultChange)
         } catch (e) {
             if (e instanceof ApiError && e.message.includes('Invalid content type. image_url is only supported by certain models.')) {
@@ -81,7 +88,7 @@ export default class DeepSeek extends Base {
         if (this.selectedDisplayId) {
             image_url = await platform.screenshot(String(this.selectedDisplayId))
         }
-    
+
         return this.requestChatCompletionsNotStream({
             model,
             messages,
@@ -106,6 +113,7 @@ export default class DeepSeek extends Base {
             throw new ApiError(`Error from DeepSeek: ${JSON.stringify(json)}`)
         }
         if (json.data.content.message.includes('END()')) {
+            this.continureWork = false
             platform.closeSecondWindow();
             platform.showFirstWindow();
             if (onResultChange) {
@@ -114,16 +122,31 @@ export default class DeepSeek extends Base {
             return ''
         }
         if (json.data.content.type === 'exec') {
-            
+            this.continureWork = true
             if (onResultChange) {
                 onResultChange(json.data.content.message)
             }
             platform.sendMessage(json.data.content.message)
             this.excuteAction(json)
-            return ''
         }
-        if (onResultChange) {
-            onResultChange(json.data.content.message)
+        if (this.continureWork) {
+            if (this.selectedDisplayId) {
+                // upcoming screenshoot
+                let _ = await platform.effectOn(this.selectedDisplayId)
+                await sleep(1000)
+                requestBody.image_url = await platform.screenshot(String(this.selectedDisplayId))
+            }
+            this.requestChatCompletionsNotStream({
+                requestBody,
+                temperature: this.options.temperature,
+                top_p: this.options.topP,
+                repetition_penalty: this.options.repetition_penalty,
+             }, signal, onResultChange)
+        }
+        if (this.regularChat) {
+            if (onResultChange) {
+                onResultChange(json.data.content.message)
+            }
         }
         return ''
     }
@@ -140,10 +163,10 @@ export default class DeepSeek extends Base {
         platform.closeFirstWindow();
         platform.showSecondWindow();
         const resolution = await platform.getResolution(this.selectedDisplayId);
-        let offsetX = 0, offsetY = 0; // Define default values
+        let offsetX = 0, offsetY = 0;
         if (this.selectedDisplayId) {
             const { x, y } = await platform.getPositionByDisplayId(this.selectedDisplayId);
-            offsetX = x;  // Assign values
+            offsetX = x;
             offsetY = y;
         }
         

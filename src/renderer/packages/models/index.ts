@@ -115,6 +115,8 @@ export function getModelDisplayName(settings: Settings, sessionType: SessionType
             return `SiliconCloud (${settings.siliconCloudModel})`
         case ModelProvider.PPIO:
             return `PPIO (${settings.ppioModel})`
+        case ModelProvider.DeepSeek:
+            return `(${settings.deepseekModel})`
         default:
             return 'unknown'
     }

@@ -120,24 +120,24 @@ export function insertMessage(sessionId: string, msg: Message) {
     )
 }
 
-export function modifyMessage(sessionId: string, updated: Message, refreshCounting?: boolean) {
+export function modifyMessage(sessionId: string, updated: Message, refreshCounting?: boolean, insertAsNew?: boolean) {
     const store = getDefaultStore()
     if (refreshCounting) {
         updated.wordCount = countWord(updated.content)
         updated.tokenCount = estimateTokensFromMessages([updated])
     }
-
+    
     updated.timestamp = new Date().getTime()
-
+    if (insertAsNew && updated.content) {
+        const newAction = createMessage('assistant', updated.content)
+        insertMessage(sessionId, newAction)
+        return
+    }
     let hasHandled = false
     const handle = (msgs: Message[]) => {
         return msgs.map((m) => {
             if (m.id === updated.id) {
                 hasHandled = true
-                if (m.content.includes(' \n 执行操作： \n ')) {
-                    updated.content = m.content + updated.content;
-                    return { ...updated }
-                }
                 return { ...updated }
             }
             return m
@@ -199,16 +199,19 @@ export async function generate(sessionId: string, targetMsg: Message) {
 
     let messages = session.messages
     let targetMsgIx = messages.findIndex((m) => m.id === targetMsg.id)
-
+    let insertAsNew = false
     try {
         const model = getModel(settings, configs)
         switch (session.type) {
             case 'chat':
             case undefined:
                 const promptMsgs = genMessageContext(settings, messages.slice(0, targetMsgIx))
+                if (settings.aiProvider == 'deepseek') {
+                    insertAsNew = true
+                }
                 const throttledModifyMessage = throttle(({ text, cancel }: { text: string, cancel: () => void }) => {
                     targetMsg = { ...targetMsg, content: text, cancel }
-                    modifyMessage(sessionId, targetMsg)
+                    modifyMessage(sessionId, targetMsg, undefined, insertAsNew)
                 }, 100)
                 await model.chat(promptMsgs, throttledModifyMessage)
                 targetMsg = {
