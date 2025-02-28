@@ -230,10 +230,9 @@ export async function generate(sessionId: string, targetMsg: Message) {
                     cancel: undefined,
                     tokensUsed: estimateTokensFromMessages([...promptMsgs, targetMsg]),
                 }
-                if (settings.aiProvider == 'deepseek') {
-                    break
+                if (settings.aiProvider != 'deepseek') {
+                    modifyMessage(sessionId, targetMsg, true)
                 }
-                modifyMessage(sessionId, targetMsg, true)
                 break
             default:
                 throw new Error(`Unknown session type: ${session.type}, generate failed`)

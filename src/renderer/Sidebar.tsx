@@ -28,7 +28,13 @@ export default function Sidebar(props: Props) {
     const [searchQuery, setSearchQuery] = useState('')
     const sessionListRef = useRef<HTMLDivElement>(null)
     const theme = useTheme()
-
+    const handleCreateNewSession = () => {
+        sessionActions.createEmpty('chat')
+        if (sessionListRef.current) {
+            sessionListRef.current.scrollTo(0, 0)
+        }
+        trackingEvent('create_new_conversation', { event_category: 'user' })
+    }
     return (
         <div
             className="fixed top-0 left-0 h-full z-50"
@@ -88,11 +94,14 @@ export default function Sidebar(props: Props) {
                             }}
                         />
 
-                        <IconButton sx={{
-                            backgroundColor: '#f0f0f0',
-                            borderRadius: '4px',
-                            padding: '2.5px',
-                        }}>
+                        <IconButton
+                            sx={{
+                                backgroundColor: '#f0f0f0',
+                                borderRadius: '4px',
+                                padding: '2.5px',
+                            }}
+                            onClick={handleCreateNewSession}
+                        >
                             <AddIcon />
                         </IconButton>
                     </Box>

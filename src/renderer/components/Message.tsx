@@ -107,7 +107,7 @@ export default function Message(props: Props) {
         content = JSON.stringify(msg.content)
     }
     if (msg.generating) {
-        content += '...'
+        content += '思考中'
     }
     if (needCollapse && isCollapsed) {
         content = msg.content.slice(0, collapseThreshold) + '... '

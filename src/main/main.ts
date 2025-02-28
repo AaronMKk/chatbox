@@ -112,7 +112,7 @@ const createWindow = async () => {
     mainWindow.setMenuBarVisibility(false)
     // second
     secondaryWindow = new BrowserWindow({
-        // show: false,
+        show: false,
         width: 160,
         height: 80,
         parent: mainWindow,
@@ -362,6 +362,10 @@ ipcMain.handle('finished-optinal-win', async (_, id) => {
 });
 ipcMain.handle('close-first-window', async () => {
     mainWindow?.minimize()
+    return true;
+});
+ipcMain.handle('exit-program', async () => {
+    app.quit()
     return true;
 });
 ipcMain.handle('show-first-window', async () => {

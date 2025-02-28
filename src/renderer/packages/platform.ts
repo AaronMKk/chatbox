@@ -138,8 +138,11 @@ export class DesktopPlatform {
     public async showFirstWindow() {
         return this.ipc.invoke('show-first-window')
     }
-    public async closeSecondWindow() {
-        return this.ipc.invoke('close-second-window')
+    public async exist() {
+        return this.ipc.invoke('show-first-window')
+    }
+    public async exit() {
+        return this.ipc.invoke('exit-program')
     }
     public async showSecondWindow() {
         return this.ipc.invoke('show-second-window')

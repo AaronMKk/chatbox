@@ -59,23 +59,24 @@ export default class DeepSeek extends Base {
             }
         });
     }
-    async showFirstWin() {
-        platform.closeSecondWindow();
-        platform.showFirstWindow();
-    }
-    async showSecondWin() {
-        platform.closeSecondWindow();
-        platform.showFirstWindow();
-    }
     async listenToStopSign() {
         return new Promise<void>((resolve) => {
             const handleFroceStop = (id: boolean) => {
+                this.showFirstWin()
                 this.forceStop = id;
                 resolve();
             };
 
             window.electronAPI?.onForceStop(handleFroceStop);
         });
+    }
+    async showFirstWin() {
+        platform.closeSecondWindow();
+        platform.showFirstWindow();
+    }
+    async showSecondWin() {
+        platform.closeFirstWindow();
+        platform.showSecondWindow();
     }
     async waitForDisplayId() {
         while (this.selectedDisplayId === null) {
@@ -144,6 +145,7 @@ export default class DeepSeek extends Base {
             throw new ApiError(`Error from DeepSeek: ${JSON.stringify(json)}`)
         }
         if (json.data.content.message.includes('END()')) {
+            this.showFirstWin()
             this.continureWork = false
 
             if (onResultChange) {
@@ -152,6 +154,7 @@ export default class DeepSeek extends Base {
             return ''
         }
         if (json.data.content.type === 'exec') {
+            this.showSecondWin()
             this.continureWork = true
             if (onResultChange) {
                 onResultChange(json.data.content.message)

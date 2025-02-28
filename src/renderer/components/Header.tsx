@@ -27,6 +27,9 @@ export default function Header(props: Props) {
     const minimizeWindow = () => {
         platform.closeFirstWindow()
     }
+    const exit = () => {
+        platform.exit()
+    }
     const maxmizeWindow = () => {
         platform.maxmizeFirstWindow()
     }
@@ -102,7 +105,7 @@ export default function Header(props: Props) {
                     <button onClick={maxmizeWindow} className="mr-5 p-0 bg-transparent border-none text-lg">
                         <VscChromeMaximize  />
                     </button>
-                    <button onClick={minimizeWindow} className="mr-2 p-0 bg-transparent border-none text-lg">
+                    <button onClick={exit} className="mr-2 p-0 bg-transparent border-none text-lg">
                         <VscChromeClose  />
                     </button>
                 </div>
