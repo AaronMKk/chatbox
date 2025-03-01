@@ -162,9 +162,9 @@ export default class DeepSeek extends Base {
             platform.sendMessage(json.data.content.message)
             this.excuteAction(json)
         }
-        if (json.data.content.plan_response) {
+        if (json.data.plan_response) {
             if (onResultChange) {
-                onResultChange(json.data.content.plan_response.message)
+                onResultChange(json.data.plan_response)
             }
         }
         if (this.continureWork) {

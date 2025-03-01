@@ -147,6 +147,9 @@ export class DesktopPlatform {
     public async showSecondWindow() {
         return this.ipc.invoke('show-second-window')
     }
+    public async closeSecondWindow() {
+        return this.ipc.invoke('close-second-window')
+    }
     public async sentPos(x: number, y: number) {
         return this.ipc.invoke('send-position', x, y)
     }

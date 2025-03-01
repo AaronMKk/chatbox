@@ -373,7 +373,7 @@ ipcMain.handle('show-first-window', async () => {
     return true;
 });
 ipcMain.handle('close-second-window', async () => {
-    secondaryWindow?.minimize()
+    secondaryWindow?.hide()
     return true;
 });
 ipcMain.handle('show-second-window', async () => {
