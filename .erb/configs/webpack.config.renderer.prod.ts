@@ -1,7 +1,3 @@
-/**
- * Build config for electron renderer process
- */
-
 import path from 'path'
 import webpack from 'webpack'
 import HtmlWebpackPlugin from 'html-webpack-plugin'
@@ -18,7 +14,7 @@ import deleteSourceMaps from '../scripts/delete-source-maps'
 checkNodeEnv('production')
 
 let enableSourceMap = false
-if (! enableSourceMap) {
+if (!enableSourceMap) {
     deleteSourceMaps()
 }
 
@@ -29,12 +25,15 @@ const configuration: webpack.Configuration = {
 
     target: ['web', 'electron-renderer'],
 
-    entry: [path.join(webpackPaths.srcRendererPath, 'index.tsx')],
+    entry: {
+        main: [path.join(webpackPaths.srcRendererPath, 'index.tsx')],
+        second: [path.join(webpackPaths.srcRendererPath, 'second_index.tsx')],
+    },
 
     output: {
         path: webpackPaths.distRendererPath,
         publicPath: './',
-        filename: 'renderer.js',
+        filename: '[name].renderer.js', // Unique JS filenames per entry point
         library: {
             type: 'umd',
         },
@@ -101,39 +100,49 @@ const configuration: webpack.Configuration = {
     },
 
     plugins: [
-        /**
-         * Create global constants which can be configured at compile time.
-         *
-         * Useful for allowing different behaviour between development builds and
-         * release builds
-         *
-         * NODE_ENV should be production so that modules do not perform certain
-         * development checks
-         */
         new webpack.EnvironmentPlugin({
             NODE_ENV: 'production',
             DEBUG_PROD: false,
         }),
 
         new MiniCssExtractPlugin({
-            filename: 'style.css',
+            filename: '[name].style.css', // Fix: Ensure unique CSS files per entry point
         }),
 
         new BundleAnalyzerPlugin({
             analyzerMode: process.env.ANALYZE === 'true' ? 'server' : 'disabled',
             analyzerPort: 8889,
         }),
-
+        
         new HtmlWebpackPlugin({
-            filename: 'index.html',
+            filename: path.join('index.html'),
             template: path.join(webpackPaths.srcRendererPath, 'index.ejs'),
             minify: {
                 collapseWhitespace: true,
                 removeAttributeQuotes: true,
                 removeComments: true,
             },
+            chunks: ['main'], // modified
             isBrowser: false,
-            isDevelopment: false,
+            env: process.env.NODE_ENV,
+            isDevelopment: process.env.NODE_ENV !== 'production',
+            nodeModules: webpackPaths.appNodeModulesPath,
+            favicon: path.join(webpackPaths.srcRendererPath, 'favicon.ico'),
+        }),
+        new HtmlWebpackPlugin({ // modified
+            // filename: 'secondary.html',
+            filename: path.join('secondary.html'),
+            minify: {
+                collapseWhitespace: true,
+                removeAttributeQuotes: true,
+                removeComments: true,
+            },
+            chunks: ['second'],
+            isBrowser: false,
+            template: path.join(webpackPaths.srcRendererPath, 'index.ejs'),
+            env: process.env.NODE_ENV,
+            isDevelopment: process.env.NODE_ENV !== 'production',
+            nodeModules: webpackPaths.appNodeModulesPath,
             favicon: path.join(webpackPaths.srcRendererPath, 'favicon.ico'),
         }),
 
