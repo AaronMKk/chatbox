@@ -21,7 +21,6 @@ import * as proxy from './proxy'
 import * as fs from 'fs-extra'
 import * as analystic from './analystic-node'
 import sanitizeFilename from 'sanitize-filename'
-import { mouse, Point, keyboard, Key, clipboard } from '@nut-tree/nut-js'
 import sharp from 'sharp'
 
 if (process.platform === 'win32') {
