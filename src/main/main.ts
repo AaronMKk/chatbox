@@ -10,7 +10,7 @@
  */
 import os from 'os'
 import path from 'path'
-import { app, BrowserWindow, shell, ipcMain, nativeTheme, session, dialog, desktopCapturer, screen } from 'electron'
+import { app, BrowserWindow, shell, ipcMain, nativeTheme, session, dialog, desktopCapturer, screen, clipboard } from 'electron'
 import { autoUpdater } from 'electron-updater'
 import log from 'electron-log'
 import MenuBuilder from './menu'
@@ -21,7 +21,8 @@ import * as proxy from './proxy'
 import * as fs from 'fs-extra'
 import * as analystic from './analystic-node'
 import sanitizeFilename from 'sanitize-filename'
-import { mouse, Point, keyboard, Key, clipboard } from '@nut-tree/nut-js'
+const robotjsPath = path.join(__dirname, '../../release/app/node_modules/robotjs');
+const robot = require(robotjsPath);
 import sharp from 'sharp'
 
 if (process.platform === 'win32') {
@@ -416,38 +417,42 @@ ipcMain.handle('get-resolution', async (_, id) => {
     return displays
 });
 ipcMain.handle('mouse-click', async (_, x, y) => {
-    await mouse.setPosition(new Point(x, y));
-    await mouse.leftClick();
+    robot.moveMouse(x, y);
+    robot.mouseClick();
     return true;
 });
+
 ipcMain.handle('double-click', async (_, x, y) => {
-    await mouse.setPosition(new Point(x, y));
-    await mouse.doubleClick(0);
+    robot.moveMouse(x, y);
+    robot.mouseClick('left', true);
     return true;
 });
+
 ipcMain.handle('mouse-scroll-down', async (_, mt) => {
-    await mouse.scrollDown(mt);
+    robot.scrollMouse(0, -mt);
     return true;
 });
+
 ipcMain.handle('mouse-scroll-up', async (_, mt) => {
-    await mouse.scrollUp(mt);
+    robot.scrollMouse(0, mt);
     return true;
 });
+
 ipcMain.handle('type-text', async (_, x, y, text) => {
-    await mouse.setPosition(new Point(x, y));
-    await mouse.leftClick();
-    // await keyboard.type(text);
-    clipboard.setContent(text);
-    await keyboard.pressKey(Key.LeftControl);
-    await keyboard.pressKey(Key.V);
-    await keyboard.releaseKey(Key.LeftControl);
-    await keyboard.releaseKey(Key.V);
+    robot.moveMouse(x, y);
+    robot.mouseClick();
+    clipboard.writeText(text);
+    robot.keyToggle('control', 'down');
+    robot.keyTap('v');
+    robot.keyToggle('control', 'up');
     return true;
 });
+
 ipcMain.handle('press-key', async (_, key) => {
-    await keyboard.pressKey(key);
+    robot.keyTap(key);
     return true;
 });
+
 //////////////// desgined for agent feature //////////////////
 
 ipcMain.handle('getStoreValue', (event, key) => {
