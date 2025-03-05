@@ -11,6 +11,8 @@
         "build:renderer": "cross-env NODE_ENV=production TS_NODE_TRANSPILE_ONLY=true webpack --config ./.erb/configs/webpack.config.renderer.prod.ts",
         "postinstall": "ts-node .erb/scripts/check-native-dep.js && electron-builder install-app-deps && cross-env NODE_ENV=development TS_NODE_TRANSPILE_ONLY=true webpack --config ./.erb/configs/webpack.config.renderer.dev.dll.ts",
         "package": "ts-node ./.erb/scripts/clean.js dist && npm run build && cross-env DEBUG=electron-builder electron-builder build --publish never",
+        "just-pack": "cross-env DEBUG=electron-builder electron-builder build --windows nsis:x64 --publish never",
+        "package:win": "ts-node ./.erb/scripts/clean.js dist && npm run build && cross-env DEBUG=electron-builder electron-builder build --windows nsis:x64 --publish never",
         "package:all": "ts-node ./.erb/scripts/clean.js dist && npm run build && electron-builder build --publish never --win --mac --linux",
         "release": "ts-node ./.erb/scripts/clean.js dist && npm run build && electron-builder build --publish always --win",
         "rebuild": "electron-rebuild --parallel --types prod,dev,optional --module-dir release/app",
@@ -149,8 +151,8 @@
         "fs-extra": "^11.1.1",
         "highlight.js": "^11.7.0",
         "i18next": "^22.4.13",
-        "jotai": "^2.1.0",
-        "jotai-optics": "^0.3.0",
+        "jotai": "2.1.0",
+        "jotai-optics": "0.3.0",
         "js-tiktoken": "^1.0.7",
         "lodash": "^4.17.21",
         "lucide-react": "^0.285.0",
@@ -198,7 +200,8 @@
     "build": {
         "productName": "Chatbox CE",
         "appId": "xyz.chatboxapp.ce",
-        "asar": true,
+        "asar": false,
+        "npmRebuild": false,
         "asarUnpack": "**\\*.{node,dll}",
         "files": [
             "dist/**/*",
@@ -242,8 +245,7 @@
                 {
                     "target": "nsis",
                     "arch": [
-                        "x64",
-                        "arm64"
+                        "x64"
                     ]
                 }
             ],

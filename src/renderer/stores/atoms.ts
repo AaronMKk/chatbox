@@ -1,11 +1,11 @@
 import { atom, SetStateAction } from 'jotai'
-import { Session, Toast, Settings, CopilotDetail, Message, SettingWindowTab
-} from '../../shared/types'
+import { Session, Toast, Settings, CopilotDetail, Message, SettingWindowTab } from '../../shared/types'
 import { selectAtom, atomWithStorage } from 'jotai/utils'
 import { focusAtom } from 'jotai-optics'
 import * as defaults from '../../shared/defaults'
 import storage, { StorageKey } from '../storage'
 import platform from '../packages/platform'
+import { isPromise } from '../lib/is'
 
 const _settingsAtom = atomWithStorage<Settings>(StorageKey.Settings, defaults.settings(), storage)
 export const settingsAtom = atom(
@@ -42,7 +42,6 @@ export const licenseDetailAtom = focusAtom(settingsAtom, (optic) => optic.prop('
 export const myCopilotsAtom = atomWithStorage<CopilotDetail[]>(StorageKey.MyCopilots, [], storage)
 
 // sessions
-
 const _sessionsAtom = atomWithStorage<Session[]>(StorageKey.ChatSessions, [], storage)
 export const sessionsAtom = atom(
     (get) => {
@@ -66,6 +65,9 @@ export const sortedSessionsAtom = atom((get) => {
 })
 
 export function sortSessions(sessions: Session[]): Session[] {
+    if (isPromise(sessions)) {
+        return []
+    }
     return [...sessions].reverse()
 }
 
@@ -77,7 +79,7 @@ export const currentSessionIdAtom = atom(
         if (idCached && sessions.some((session) => session.id === idCached)) {
             return idCached
         }
-        return sessions[0].id
+        return sessions[0]?.id
     },
     (_get, set, update: string) => {
         set(_currentSessionIdCachedAtom, update)
@@ -89,14 +91,13 @@ export const currentSessionAtom = atom((get) => {
     const sessions = get(sessionsAtom)
     let current = sessions.find((session) => session.id === id)
     if (!current) {
-        return sessions[sessions.length - 1]    // fallback to the last session
+        return sessions[sessions.length - 1] // fallback to the last session
     }
     return current
 })
 
 export const currentSessionNameAtom = selectAtom(currentSessionAtom, (s) => s.name)
 export const currsentSessionPicUrlAtom = selectAtom(currentSessionAtom, (s) => s.picUrl)
-
 
 export const currentMessageListAtom = selectAtom(currentSessionAtom, (s) => {
     let messageContext: Message[] = []
