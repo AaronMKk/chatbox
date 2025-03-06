@@ -27,7 +27,7 @@ const StyledTypography = styled(Typography)(({ theme }) => ({
   maxHeight: '60px', // Ensure the height does not expand
   lineHeight: '1rem', // Ensure line height is manageable within 45px
   [theme.breakpoints.down('sm')]: {
-    fontSize: '0.92rem',
+    fontSize: '0.75rem',
   },
 }));
 
@@ -38,13 +38,14 @@ const ThumbnailBox = styled(Box)(({ theme }) => ({
   marginLeft: theme.spacing(0),
   marginRight: theme.spacing(0),
 }));
-const handleForceStop = () => {
+
+function ResponsiveAppBar() {
+  const [logoText, setLogoText] = React.useState('金智维助手');
+  const [thumbnail, setThumbnailContent] = React.useState('');
+  const handleForceStop = () => {
+    setLogoText('金智维助手');
     customPlatform.forceStop(true)
     }
-function ResponsiveAppBar() {
-  const [logoText, setLogoText] = React.useState('LOGO');
-  const [thumbnail, setThumbnailContent] = React.useState('');
-
   React.useEffect(() => {
     const handleActionMessage = (message: string) => {
       setLogoText(message);

@@ -17,12 +17,10 @@ import {
     ipcMain,
     nativeTheme,
     session,
-    dialog,
     desktopCapturer,
     screen,
     clipboard,
 } from 'electron'
-import { autoUpdater } from 'electron-updater'
 import log from 'electron-log'
 import MenuBuilder from './menu'
 import { resolveHtmlPath } from './util'
@@ -32,37 +30,12 @@ import * as proxy from './proxy'
 import * as fs from 'fs-extra'
 import * as analystic from './analystic-node'
 import sanitizeFilename from 'sanitize-filename'
-const robotjsPath = path.join(__dirname, '../../release/app/node_modules/robotjs')
 
 const robot = require('robotjs')
 import sharp from 'sharp'
 
 if (process.platform === 'win32') {
     app.setAppUserModelId(app.name)
-}
-
-class AppUpdater {
-    constructor() {
-        log.transports.file.level = 'info'
-        const locale = new Locale()
-
-        autoUpdater.logger = log
-        autoUpdater.setFeedURL('https://chatboxai.app/api/auto_upgrade/open-source')
-        autoUpdater.checkForUpdatesAndNotify()
-        autoUpdater.once('update-downloaded', (event) => {
-            dialog
-                .showMessageBox({
-                    type: 'info',
-                    buttons: [locale.t('Restart'), locale.t('Later')],
-                    title: locale.t('App_Update'),
-                    message: event.releaseName || locale.t('New_Version'),
-                    detail: locale.t('New_Version_Downloaded'),
-                })
-                .then((returnValue) => {
-                    if (returnValue.response === 0) autoUpdater.quitAndInstall()
-                })
-        })
-    }
 }
 
 let mainWindow: BrowserWindow | null = null
@@ -172,8 +145,6 @@ const createWindow = async () => {
     })
     // secondaryWindow.webContents.toggleDevTools()
 
-    new AppUpdater()
-
     session.defaultSession.webRequest.onHeadersReceived((details, callback) => {
         callback({
             responseHeaders: {
@@ -195,12 +166,14 @@ app.on('window-all-closed', () => {
 
 app.whenReady()
     .then(() => {
-        createWindow()
-        app.on('activate', () => {
-            if (mainWindow === null) createWindow()
-        })
+        session.defaultSession.clearStorageData().then(() => {
+            createWindow();
+            app.on('activate', () => {
+                if (mainWindow === null) createWindow();
+            });
+        });
     })
-    .catch(console.log)
+    .catch(console.log);
 function createEffectWindow(id: number) {
     if (effectWindow) return
     const displays = screen.getAllDisplays()
@@ -295,7 +268,7 @@ function createEffectWindow(id: number) {
     `)
     setTimeout(() => {
         removeEffectWindow()
-    }, 1000)
+    }, 800)
 }
 
 function removeEffectWindow() {
@@ -407,6 +380,8 @@ ipcMain.handle('max-first-win', async () => {
 ipcMain.handle('screenshot', async (_, id) => {
     const mainWindowBounds = mainWindow?.getBounds()
     if (mainWindowBounds) {
+        secondaryWindow?.show()
+        mainWindow?.hide()
         const sources = await desktopCapturer.getSources({
             types: ['screen'],
             thumbnailSize: {

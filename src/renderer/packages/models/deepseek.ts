@@ -29,6 +29,7 @@ export default class DeepSeek extends Base {
     private continureWork: boolean | null = null;
     private regularChat: boolean | null = true;
     public options: Options
+    private processedConversationIds: Set<string> = new Set();
     constructor(options: Options) {
         super()
         this.options = options
@@ -111,6 +112,8 @@ export default class DeepSeek extends Base {
         // take first screenshoot silently
         let image_url = ''
         if (this.selectedDisplayId) {
+            let _ = await platform.effectOn(this.selectedDisplayId)
+            await sleep(1200)
             image_url = await platform.screenshot(String(this.selectedDisplayId))
         }
 
@@ -140,6 +143,9 @@ export default class DeepSeek extends Base {
             requestBody,
             signal
         )
+        if (this.forceStop) {
+            return ''
+        }
         const json = await response.json()
         if (json.error) {
             throw new ApiError(`Error from DeepSeek: ${JSON.stringify(json)}`)
@@ -160,18 +166,22 @@ export default class DeepSeek extends Base {
                 onResultChange(json.data.content.message)
             }
             platform.sendMessage(json.data.content.message)
-            this.excuteAction(json)
+            await this.excuteAction(json)
+            await sleep(500)
         }
         if (json.data.plan_response) {
-            if (onResultChange) {
-                onResultChange(json.data.plan_response)
+            if (!this.processedConversationIds.has(requestBody.conversation_id)) {
+                this.processedConversationIds.add(requestBody.conversation_id);
+                if (onResultChange) {
+                    onResultChange(json.data.plan_response)
+                }
             }
         }
         if (this.continureWork) {
             if (this.selectedDisplayId) {
                 // upcoming screenshoot
                 let _ = await platform.effectOn(this.selectedDisplayId)
-                await sleep(1000)
+                await sleep(1200)
                 requestBody.image_url = await platform.screenshot(String(this.selectedDisplayId))
             }
             this.requestChatCompletionsNotStream(requestBody, signal, onResultChange)
@@ -193,6 +203,9 @@ export default class DeepSeek extends Base {
     }
 
     async excuteAction(json: any) {
+        if (this.forceStop) {
+            return ''
+        }
         platform.closeFirstWindow();
         platform.showSecondWindow();
         const resolution = await platform.getResolution(this.selectedDisplayId);
