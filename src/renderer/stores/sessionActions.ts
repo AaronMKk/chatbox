@@ -110,6 +110,8 @@ export function insertMessage(sessionId: string, msg: Message) {
         sessions.map((s) => {
             if (s.id === sessionId) {
                 const newMessages = [...s.messages]
+                const firstFourWords = msg.content.slice(0, 4);
+                s.name = s.name=='Untitled' ? firstFourWords + '...': s.name
                 newMessages.push(msg)
                 return {
                     ...s,

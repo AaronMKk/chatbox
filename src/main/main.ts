@@ -120,23 +120,7 @@ const createWindow = async () => {
                 : path.join(__dirname, '../../.erb/dll/preload.js'),
         },
     })
-    const updateSecondaryWindowPosition = () => {
-        if (mainWindow && secondaryWindow) {
-            const mainWindowBounds = mainWindow.getBounds()
 
-            const targetDisplay = screen.getDisplayNearestPoint({
-                x: mainWindowBounds.x,
-                y: mainWindowBounds.y,
-            }).bounds
-
-            const x = targetDisplay.x + (targetDisplay.width - 360) / 2
-            const y = 0
-
-            secondaryWindow.setBounds({ x, y, width: 360, height: 60 })
-        }
-    }
-
-    setInterval(updateSecondaryWindowPosition, 1000)
 
     secondaryWindow.loadURL(resolveHtmlPath('secondary.html'))
 
@@ -277,6 +261,20 @@ function removeEffectWindow() {
         effectWindow = null
     }
 }
+function updateSecondWindow(id: Number) {
+    const displays = screen.getAllDisplays()
+    const display = displays.find((d) => d.id === id)?.bounds
+    let _offsetX = 0
+    let _offsetY = 0
+    let _width = 1920
+    let _height = 1080
+    if (display) {
+        const x = display.x + (display.width - 360) / 2
+        const y = 0
+        secondaryWindow?.setBounds({ x, y, width: 360, height: 60 })
+    }
+    
+}
 ipcMain.handle('send-position', (event, x, y) => {
     if (mainWindow) {
         mainWindow.setBounds({
@@ -346,6 +344,7 @@ ipcMain.handle('show-optinal-win', async () => {
 })
 ipcMain.handle('finished-optinal-win', async (_, id) => {
     mainWindow?.webContents.send('displayId', id)
+    updateSecondWindow(Number(id))
     return true
 })
 ipcMain.handle('close-first-window', async () => {
@@ -381,7 +380,6 @@ ipcMain.handle('screenshot', async (_, id) => {
     const mainWindowBounds = mainWindow?.getBounds()
     if (mainWindowBounds) {
         secondaryWindow?.show()
-        mainWindow?.hide()
         const sources = await desktopCapturer.getSources({
             types: ['screen'],
             thumbnailSize: {

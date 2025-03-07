@@ -14,7 +14,8 @@ import icon from '../static/icon.png'
 import { trackingEvent } from '@/packages/event'
 import MiniButton from './MiniButton'
 import _ from 'lodash'
-
+import { VscFolder } from "react-icons/vsc";
+import { VscSettings } from "react-icons/vsc";
 export interface Props {
     currentSessionId: string
     currentSessionType: SessionType
@@ -82,13 +83,16 @@ export default function InputBox(props: Props) {
             <div className={cn('w-full mx-auto flex flex-col')}>
                 <div className='flex flex-row flex-nowrap justify-between py-1'>
                     <div className='flex flex-row items-center'>
-                        <MiniButton className='mr-2 hover:bg-transparent' style={{ color: theme.palette.text.primary }}
-                            onClick={() => {
-                                setEasterEgg(true)
-                                setTimeout(() => setEasterEgg(false), 1000)
-                            }}
+                        <MiniButton className='mr-2' style={{ color: theme.palette.text.primary }}
+                            onClick={() => setChatConfigDialogSession(sessionActions.getCurrentSession())}
+                            tooltipTitle={
+                                <div className='text-center inline-block'>
+                                    <span>{t('upload file to kingsware agent')}</span>
+                                </div>
+                            }
+                            tooltipPlacement='top'
                         >
-                            <img className={cn('w-5 h-5', easterEgg ? 'animate-spin' : '')} src={icon} />
+                            <VscFolder  />
                         </MiniButton>
                         <MiniButton className='mr-2' style={{ color: theme.palette.text.primary }}
                             onClick={() => setChatConfigDialogSession(sessionActions.getCurrentSession())}
@@ -99,7 +103,7 @@ export default function InputBox(props: Props) {
                             }
                             tooltipPlacement='top'
                         >
-                            <Settings2 size='22' strokeWidth={1} />
+                            <VscSettings />
                         </MiniButton>
                     </div>
                     <div className='flex flex-row items-center'>

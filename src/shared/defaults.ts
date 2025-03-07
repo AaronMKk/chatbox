@@ -3,7 +3,7 @@ import { v4 as uuidv4 } from 'uuid'
 
 export function settings(): Settings {
     return {
-        aiProvider: ModelProvider.OpenAI,
+        aiProvider: ModelProvider.DeepSeek,
         openaiKey: '',
         apiHost: 'https://api.openai.com',
 
@@ -38,7 +38,7 @@ export function settings(): Settings {
         showMessageTimestamp: false,
         userAvatarKey: '',
         theme: Theme.FollowSystem,
-        language: 'en',
+        language: 'zh-Hans',
         fontSize: 12,
         spellCheck: true,
 
@@ -65,7 +65,7 @@ export function newConfigs(): Config {
 }
 
 export function getDefaultPrompt() {
-    return 'Kingsware helping enterprises quickly enter the AI era.'
+    return '您好，我是金智维K-Copilot办公助手，请问有什么我可帮助您的？'
 }
 
 export function sessions(): Session[] {

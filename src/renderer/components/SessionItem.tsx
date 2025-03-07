@@ -12,7 +12,9 @@ import { useTranslation } from 'react-i18next'
 import * as sessionActions from '../stores/sessionActions'
 import * as atoms from '@/stores/atoms'
 import { cn } from '@/lib/utils'
-
+import qywxPic from '../static/qywx.png';
+import jrPic from '../static/jr.png';
+import icon from '../static/icon.png';
 export interface Props {
     session: Session
     selected: boolean
@@ -49,8 +51,12 @@ function _SessionItem(props: Props) {
             >
                 <ListItemIcon>
                     <IconButton color={'inherit'} onClick={onClick}>
-                        {session.picUrl ? (
-                            <Avatar sizes={medianSize} sx={{ width: medianSize, height: medianSize }} src={session.picUrl} />
+                        {session.name.includes('企业微信') ? (
+                        <Avatar sizes={medianSize} sx={{ width: medianSize, height: medianSize }} src={qywxPic} imgProps={{ style: { objectFit: 'cover', width: '100%', height: '100%' } }} />
+                        ) : session.name.includes('金融') ? (
+                        <Avatar sizes={medianSize} sx={{ width: medianSize, height: medianSize }} src={jrPic} imgProps={{ style: { objectFit: 'cover', width: '100%', height: '100%' } }} />
+                        ) : session.name.includes('普通') ? (
+                        <Avatar sizes={medianSize} sx={{ width: medianSize, height: medianSize }} src={icon} imgProps={{ style: { objectFit: 'cover', width: '100%', height: '100%' } }}/>
                         ) : (
                             <ChatBubbleOutlineOutlinedIcon fontSize="small" />
                         )}

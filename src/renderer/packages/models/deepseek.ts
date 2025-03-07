@@ -86,6 +86,7 @@ export default class DeepSeek extends Base {
     }
 
     async callChatCompletion(rawMessages: Message[], signal?: AbortSignal, onResultChange?: onResultChange): Promise<string> {
+        this.initDisplayId();
         try {
             if (!this.selectedDisplayId) {
                 platform.showOptionalWindows()
@@ -157,6 +158,7 @@ export default class DeepSeek extends Base {
             if (onResultChange) {
                 onResultChange('task should be fished')
             }
+            localStorage.removeItem('selectedDisplayId');
             return ''
         }
         if (json.data.content.type === 'exec') {
